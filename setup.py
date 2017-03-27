@@ -9,7 +9,7 @@ src_fnlst = [ os.path.join('src', fn) for fn in [
 
 setup(name='PySeqArray',
 	version = '0.1',
-	description = 'Python Interface to GDS Files for Data Management of Whole-Genome Sequence Variant Calls',
+	description = 'Python Interface to SeqArray Files for Data Management of Whole-Genome Sequence Variant Calls',
 	url = 'http://github.com/CoreArray/PySeqArray',
 	author = 'Xiuwen Zheng',
 	author_email = 'zhengxwen@gmail.com',
