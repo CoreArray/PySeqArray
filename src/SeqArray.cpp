@@ -24,7 +24,7 @@
 #include <set>
 #include <algorithm>
 
-// #include "ReadByVariant.h"
+#include "ReadByVariant.h"
 // #include "ReadBySample.h"
 #include <ctype.h>
 
@@ -1130,10 +1130,15 @@ COREARRAY_DLL_EXPORT SEXP SEQ_Pkg_Init(SEXP dim_name)
 
 // Register routines
 
+extern PyObject* SEQ_GetData(PyObject *self, PyObject *args);
+
+
 static PyMethodDef module_methods[] = {
 	// file operations
     { "file_init", (PyCFunction)SEQ_File_Init, METH_VARARGS, NULL },
     { "file_done", (PyCFunction)SEQ_File_Done, METH_VARARGS, NULL },
+	// get data
+    { "get_data", (PyCFunction)SEQ_GetData, METH_VARARGS, NULL },
 
 	// end
 	{ NULL, NULL, 0, NULL }
@@ -1158,7 +1163,7 @@ PyMODINIT_FUNC PyInit_ccall()
 PyMODINIT_FUNC initccall()
 #endif
 {
-	numpy_init();
+	if (!numpy_init()) return NULL;
 	if (Init_GDS_Routines() < 0) return NULL;
 
 	// create the module and add the functions

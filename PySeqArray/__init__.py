@@ -30,33 +30,11 @@ class SeqArray(pygds.gdsfile):
 		# TODO: file checking
 
 	def close(self):
-		id = self.fileid
+		cc.file_done(self.fileid)
 		pygds.gdsfile.close(self)
-		cc.file_done(id)
 
-	def sync(self):
-		cc.sync_gds(self.fileid)
-
-	def filesize(self):
-		return cc.filesize(self.fileid)
-
-	def root(self):
-		v = gdsnode()
-		(v.idx, v.pid) = cc.root_gds(self.fileid)
-		return v
-
-	def index(self, path, silent=False):
-		v = gdsnode()
-		v.idx, v.pid = cc.index_gds(self.fileid, path, silent)
-		if v.idx >= 0:
-			return v
-		else:
-			return None
-
-	def show(self):
-		print('File:', self.filename)
-		self.root().show()
-
+	def GetData(self, name):
+		return cc.get_data(self.fileid, name)
 
 
 

@@ -953,121 +953,11 @@ void CProgressStdOut::ShowProgress()
 
 
 // ===========================================================
-// Pre-defined R objects
-// ===========================================================
-
-SEXP R_Geno_Dim2_Name = R_NilValue;
-SEXP R_Geno_Dim3_Name = R_NilValue;
-SEXP R_Dosage_Name    = R_NilValue;
-SEXP R_Data_Name      = R_NilValue;
-SEXP R_Data_Dim2_Name = R_NilValue;
-
-
-
-
-// ===========================================================
 // Define Functions
 // ===========================================================
 
 // the buffer of ArrayTRUEs
 static vector<C_BOOL> TrueBuffer;
-
-COREARRAY_DLL_LOCAL size_t RLength(SEXP val)
-{
-	return (!Rf_isNull(val)) ? XLENGTH(val) : 0;
-}
-
-
-COREARRAY_DLL_LOCAL SEXP RGetListElement(SEXP list, const char *name)
-{
-	SEXP elmt = R_NilValue;
-	SEXP names = getAttrib(list, R_NamesSymbol);
-	size_t n = RLength(names);
-	for (size_t i = 0; i < n; i++)
-	{
-		if (strcmp(CHAR(STRING_ELT(names, i)), name) == 0)
-		{
-			elmt = VECTOR_ELT(list, i);
-			break;
-		}
-	}
-	return elmt;
-}
-
-
-/// Allocate R object given by SVType
-COREARRAY_DLL_LOCAL SEXP RObject_GDS(PdAbstractArray Node, size_t n,
-	int &nProtected, bool bit1_is_logical)
-{
-	SEXP ans = R_NilValue;
-	C_SVType SVType = GDS_Array_GetSVType(Node);
-
-	if (COREARRAY_SV_INTEGER(SVType))
-	{
-		char classname[128];
-		GDS_Node_GetClassName(Node, classname, sizeof(classname));
-		if (strcmp(classname, "dBit1") == 0)
-		{
-			if (bit1_is_logical)
-				PROTECT(ans = NEW_LOGICAL(n));
-			else
-				PROTECT(ans = NEW_INTEGER(n));
-		} else if (GDS_R_Is_Logical(Node))
-		{
-			PROTECT(ans = NEW_LOGICAL(n));
-		} else {
-			PROTECT(ans = NEW_INTEGER(n));
-			nProtected += GDS_R_Set_IfFactor(Node, ans);
-		}
-		nProtected ++;
-	} else if (COREARRAY_SV_FLOAT(SVType))
-	{
-		PROTECT(ans = NEW_NUMERIC(n));
-		nProtected ++;
-	} else if (COREARRAY_SV_STRING(SVType))
-	{
-		PROTECT(ans = NEW_CHARACTER(n));
-		nProtected ++;
-	}
-
-	return ans;
-}
-
-
-/// Append data to a GDS node
-COREARRAY_DLL_LOCAL void RAppendGDS(PdAbstractArray Node, SEXP Val)
-{
-	switch (TYPEOF(Val))
-	{
-	case LGLSXP:  // logical
-		GDS_Array_AppendData(Node, XLENGTH(Val), LOGICAL(Val), svInt32);
-		break;
-	case INTSXP:  // integer
-		GDS_Array_AppendData(Node, XLENGTH(Val), INTEGER(Val), svInt32);
-		break;
-	case REALSXP:  // numeric
-		GDS_Array_AppendData(Node, XLENGTH(Val), REAL(Val), svFloat64);
-		break;
-	case RAWSXP:  // RAW
-		GDS_Array_AppendData(Node, XLENGTH(Val), RAW(Val), svInt8);
-		break;
-	case STRSXP:  // character
-		{
-			R_xlen_t n = XLENGTH(Val);
-			vector<string> buf(n);
-			for (R_xlen_t i=0; i < n; i++)
-			{
-				SEXP s = STRING_ELT(Val, i);
-				if (s != NA_STRING) buf[i] = translateCharUTF8(s);
-			}
-			GDS_Array_AppendData(Node, n, &buf[0], svStrUTF8);
-		}
-		break;
-	default:
-		throw ErrSeqArray("the user-defined function should return a vector.");
-	}
-}
-
 
 COREARRAY_DLL_LOCAL C_BOOL *NeedArrayTRUEs(size_t len)
 {
@@ -1245,10 +1135,56 @@ COREARRAY_DLL_LOCAL string GDS_PATH_PREFIX(const string &path, char prefix)
 // Import the NumPy Package
 // ===========================================================
 
-COREARRAY_DLL_LOCAL void numpy_init()
+// import numpy functions
+#if (PY_MAJOR_VERSION >= 3)
+static PyObject* _init_() { import_array(); return Py_None; }
+#else
+static void _init_() { import_array(); return NULL; }
+#endif
+
+COREARRAY_DLL_LOCAL bool numpy_init()
 {
-	// import numpy functions
-	import_array();
+#if (PY_MAJOR_VERSION >= 3)
+	if (_init_() == NUMPY_IMPORT_ARRAY_RETVAL) return false;
+#else
+	_init_();
+#endif
+	return true;
+}
+
+
+static const char *err_new_array = "Fails to allocate a new numpy array object.";
+
+static PyObject* new_array(size_t n, NPY_TYPES type)
+{
+	npy_intp dims[1] = { n };
+	PyObject *rv = PyArray_SimpleNew(1, dims, type);
+	if (rv == NULL)
+		throw ErrSeqArray(err_new_array);
+	return rv;
+}
+
+COREARRAY_DLL_LOCAL PyObject* numpy_new_int(size_t n)
+{
+	return new_array(n, NPY_INT32);
+}
+
+COREARRAY_DLL_LOCAL PyObject* numpy_new_string(size_t n)
+{
+	return new_array(n, NPY_OBJECT);
+}
+
+COREARRAY_DLL_LOCAL void* numpy_getptr(PyObject *obj)
+{
+	if (obj)
+		return PyArray_DATA(obj);
+	else
+		return NULL;
+}
+
+COREARRAY_DLL_LOCAL void numpy_setval(PyObject *obj, void *ptr, PyObject *val)
+{
+	PyArray_SETITEM(obj, ptr, val);
 }
 
 }

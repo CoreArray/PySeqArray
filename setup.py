@@ -6,7 +6,8 @@ import pygds
 
 src_fnlst = [ os.path.join('src', fn) for fn in [
 	# 'Index.cpp',
-	'Index.cpp', 'LinkGDS.c', 'SeqArray.cpp', 'vectorization.c' ] ]
+	'GetData.cpp', 'Index.cpp', 'SeqArray.cpp',
+	'LinkGDS.c', 'vectorization.c' ] ]
 
 
 setup(name='PySeqArray',

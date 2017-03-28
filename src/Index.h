@@ -49,10 +49,6 @@
 namespace PySeqArray
 {
 
-typedef void* SEXP;
-
-
-
 using namespace std;
 using namespace CoreArray;
 
@@ -416,9 +412,9 @@ public:
 	virtual bool Next();
 
 	/// return an R object for the next call 'ReadData()'
-	virtual SEXP NeedRData(int &nProtected) = 0;
+	virtual PyObject* NeedRData(int &nProtected) = 0;
 	/// read data to R object
-	virtual void ReadData(SEXP val) = 0;
+	virtual void ReadData(PyObject *val) = 0;
 
 	/// variable type
 	inline TVarType VarType() const { return fVarType; }
@@ -490,37 +486,11 @@ protected:
 
 
 // ===========================================================
-// Pre-defined R objects
-// ===========================================================
-
-extern SEXP R_Geno_Dim2_Name;
-extern SEXP R_Geno_Dim3_Name;
-extern SEXP R_Dosage_Name;
-extern SEXP R_Data_Name;
-extern SEXP R_Data_Dim2_Name;
-
-
-
-// ===========================================================
 // Define Functions
 // ===========================================================
 
 /// Get the number of TRUEs
 #define GetNumOfTRUE(ptr, n)    vec_i8_cnt_nonzero((C_Int8*)(ptr), n)
-
-
-/// return the length in val, it is safe to call when val=R_NilValue
-COREARRAY_DLL_LOCAL size_t RLength(SEXP val);
-
-/// get the list element named str, or return R_NilValue
-COREARRAY_DLL_LOCAL SEXP RGetListElement(SEXP list, const char *name);
-
-/// allocate R object given by SVType
-COREARRAY_DLL_LOCAL SEXP RObject_GDS(PdAbstractArray Node, size_t n,
-	int &nProtected, bool bit1_is_logical);
-
-/// append data to a GDS node
-COREARRAY_DLL_LOCAL void RAppendGDS(PdAbstractArray Node, SEXP Val);
 
 
 /// requires a vector of TRUEs
@@ -574,7 +544,13 @@ public:
 // Import the NumPy Package
 // ===========================================================
 
-COREARRAY_DLL_LOCAL void numpy_init();
+COREARRAY_DLL_LOCAL bool numpy_init();
+
+COREARRAY_DLL_LOCAL PyObject* numpy_new_int(size_t n);
+COREARRAY_DLL_LOCAL PyObject* numpy_new_string(size_t n);
+
+COREARRAY_DLL_LOCAL void* numpy_getptr(PyObject *obj);
+COREARRAY_DLL_LOCAL void numpy_setval(PyObject *obj, void *ptr, PyObject *val);
 
 }
 
