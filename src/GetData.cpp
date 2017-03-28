@@ -70,7 +70,7 @@ static PyObject* VarGetData(CFileInfo &File, const char *name)
 		if (n > 0)
 		{
 			const int *base = &File.Position()[0];
-			rv_ans = numpy_new_int(n);
+			rv_ans = numpy_new_int32(n);
 			int *p = (int*)numpy_getptr(rv_ans);
 			C_BOOL *s = Sel.pVariant();
 			for (size_t m=File.VariantNum(); m > 0; m--)
@@ -79,7 +79,7 @@ static PyObject* VarGetData(CFileInfo &File, const char *name)
 				base ++;
 			}
 		} else
-			rv_ans = numpy_new_int(0);
+			rv_ans = numpy_new_int32(0);
 
 	} else if (strcmp(name, "chromosome") == 0)
 	{
@@ -134,42 +134,23 @@ static PyObject* VarGetData(CFileInfo &File, const char *name)
 		// ===========================================================
 		// genotypic data
 
-/*		int nSample  = File.SampleSelNum();
+		int nSample  = File.SampleSelNum();
 		int nVariant = File.VariantSelNum();
 
 		if ((nSample > 0) && (nVariant > 0))
 		{
 			// initialize GDS genotype Node
-			CApply_Variant_Geno NodeVar(File, use_raw);
-			// size to be allocated
+			CApply_Variant_Geno NodeVar(File);
+			// set
+			rv_ans = numpy_new_uint8_dim3(nVariant, nSample, File.Ploidy());
+			C_UInt8 *base = (C_UInt8 *)numpy_getptr(rv_ans);
 			ssize_t SIZE = (ssize_t)nSample * File.Ploidy();
-			if (use_raw)
-			{
-				rv_ans = PROTECT(NEW_RAW(nVariant * SIZE));
-				C_UInt8 *base = (C_UInt8 *)RAW(rv_ans);
-				do {
-					NodeVar.ReadGenoData(base);
-					base += SIZE;
-				} while (NodeVar.Next());
-			} else {
-				rv_ans = PROTECT(NEW_INTEGER(nVariant * SIZE));
-				int *base = INTEGER(rv_ans);
-				do {
-					NodeVar.ReadGenoData(base);
-					base += SIZE;
-				} while (NodeVar.Next());
-			}
-
-			SEXP dim = PROTECT(NEW_INTEGER(3));
-				int *p = INTEGER(dim);
-				p[0] = File.Ploidy(); p[1] = nSample; p[2] = nVariant;
-			SET_DIM(rv_ans, dim);
-			SET_DIMNAMES(rv_ans, R_Geno_Dim3_Name);
-
-			// finally
-			UNPROTECT(2);
-		}
-*/
+			do {
+				NodeVar.ReadGenoData(base);
+				base += SIZE;
+			} while (NodeVar.Next());
+		} else
+			rv_ans = numpy_new_uint8(0);
 
 	} else if (strcmp(name, "@genotype") == 0)
 	{
@@ -396,9 +377,9 @@ static PyObject* VarGetData(CFileInfo &File, const char *name)
 	{
 		// ===========================================================
 		// the number of distinct alleles
-/*
+
 		ssize_t nVariant = File.VariantSelNum();
-		rv_ans = numpy_new_int(nVariant);
+		rv_ans = numpy_new_int32(nVariant);
 		int *p = (int*)numpy_getptr(rv_ans);
 
 		CApply_Variant_NumAllele NodeVar(File);
@@ -407,7 +388,6 @@ static PyObject* VarGetData(CFileInfo &File, const char *name)
 			p[i] = NodeVar.GetNumAllele();
 			NodeVar.Next();
 		}
-*/
 
 	} else {
 		throw ErrSeqArray(

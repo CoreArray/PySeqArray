@@ -5,8 +5,7 @@ import pygds
 
 
 src_fnlst = [ os.path.join('src', fn) for fn in [
-	# 'Index.cpp',
-	'GetData.cpp', 'Index.cpp', 'SeqArray.cpp',
+	'GetData.cpp', 'Index.cpp', 'ReadByVariant.cpp', 'SeqArray.cpp',
 	'LinkGDS.c', 'vectorization.c' ] ]
 
 

@@ -35,12 +35,11 @@ class COREARRAY_DLL_LOCAL CApply_Variant_Basic: public CApply_Variant
 {
 protected:
 	C_SVType SVType;
-	PyObject *VarNode;  ///< R object
 public:
 	/// constructor
 	CApply_Variant_Basic(CFileInfo &File, const char *var_name);
 	virtual void ReadData(PyObject *val);
-	virtual PyObject *NeedRData(int &nProtected);
+	virtual PyObject *NeedArray();
 };
 
 
@@ -54,7 +53,7 @@ public:
 	/// constructor
 	CApply_Variant_Pos(CFileInfo &File);
 	virtual void ReadData(PyObject *val);
-	virtual PyObject *NeedRData(int &nProtected);
+	virtual PyObject *NeedArray(int &nProtected);
 };
 
 
@@ -68,7 +67,7 @@ public:
 	/// constructor
 	CApply_Variant_Chrom(CFileInfo &File);
 	virtual void ReadData(PyObject *val);
-	virtual PyObject *NeedRData(int &nProtected);
+	virtual PyObject *NeedArray(int &nProtected);
 };
 
 
@@ -81,11 +80,9 @@ protected:
 	CGenoIndex *GenoIndex;  ///< indexing genotypes
 	ssize_t SiteCount;  ///< the total number of entries at a site
 	ssize_t CellCount;  ///< the selected number of entries at a site
-	int UseRaw;  ///< whether use RAW type: FALSE, int; TRUE, raw; NA: auto
 	vector<C_BOOL> Selection;  ///< the buffer of selection
 	VEC_AUTO_PTR ExtPtr;       ///< a pointer to the additional buffer
-	PyObject *VarIntGeno;    ///< genotype R integer object
-	PyObject *VarRawGeno;    ///< genotype R RAW object
+	PyObject *VarIntGeno;      ///< genotype R integer object
 
 	inline int _ReadGenoData(int *Base);
 	inline C_UInt8 _ReadGenoData(C_UInt8 *Base);
@@ -96,12 +93,13 @@ public:
 
 	/// constructor
 	CApply_Variant_Geno();
-	CApply_Variant_Geno(CFileInfo &File, int use_raw);
+	CApply_Variant_Geno(CFileInfo &File);
+	~CApply_Variant_Geno();
 
-	void Init(CFileInfo &File, int use_raw);
+	void Init(CFileInfo &File);
 
+	virtual PyObject *NeedArray();
 	virtual void ReadData(PyObject *val);
-	virtual PyObject *NeedRData(int &nProtected);
 
 	/// read genotypes in 32-bit integer
 	void ReadGenoData(int *Base);
@@ -122,7 +120,7 @@ public:
 	CApply_Variant_Dosage(CFileInfo &File, int use_raw);
 
 	virtual void ReadData(PyObject *val);
-	virtual PyObject *NeedRData(int &nProtected);
+	virtual PyObject *NeedArray(int &nProtected);
 
 	/// read dosages in 32-bit integer
 	void ReadDosage(int *Base);
@@ -154,7 +152,7 @@ public:
 	void Init(CFileInfo &File, bool use_raw);
 
 	virtual void ReadData(PyObject *val);
-	virtual PyObject *NeedRData(int &nProtected);
+	virtual PyObject *NeedArray(int &nProtected);
 };
 
 
@@ -174,7 +172,7 @@ public:
 	CApply_Variant_Info(CFileInfo &File, const char *var_name);
 
 	virtual void ReadData(PyObject *val);
-	virtual PyObject *NeedRData(int &nProtected);
+	virtual PyObject *NeedArray(int &nProtected);
 };
 
 
@@ -201,7 +199,7 @@ public:
 	void Init(CFileInfo &File, const char *var_name);
 
 	virtual void ReadData(PyObject *val);
-	virtual PyObject *NeedRData(int &nProtected);
+	virtual PyObject *NeedArray(int &nProtected);
 };
 
 
@@ -212,14 +210,12 @@ class COREARRAY_DLL_LOCAL CApply_Variant_NumAllele: public CApply_Variant
 {
 private:
 	string strbuf;
-protected:
-	PyObject *VarNode;  ///< R object
 public:
 	/// constructor
 	CApply_Variant_NumAllele(CFileInfo &File);
 
+	virtual PyObject *NeedArray();
 	virtual void ReadData(PyObject *val);
-	virtual PyObject *NeedRData(int &nProtected);
 	int GetNumAllele();
 };
 

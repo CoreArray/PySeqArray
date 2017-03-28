@@ -703,12 +703,20 @@ C_BOOL *CVarApply::NeedTRUEs(size_t size)
 
 
 CApply_Variant::CApply_Variant(): CVarApply()
-{ }
+{
+	VarNode = NULL;
+}
 
 CApply_Variant::CApply_Variant(CFileInfo &File): CVarApply()
 {
 	MarginalSize = File.VariantNum();
 	MarginalSelect = File.Selection().pVariant();
+	VarNode = NULL;
+}
+
+CApply_Variant::~CApply_Variant()
+{
+	if (VarNode) Py_DECREF(VarNode);
 }
 
 
@@ -1159,19 +1167,63 @@ static PyObject* new_array(size_t n, NPY_TYPES type)
 {
 	npy_intp dims[1] = { n };
 	PyObject *rv = PyArray_SimpleNew(1, dims, type);
-	if (rv == NULL)
-		throw ErrSeqArray(err_new_array);
+	if (rv == NULL) throw ErrSeqArray(err_new_array);
 	return rv;
 }
 
-COREARRAY_DLL_LOCAL PyObject* numpy_new_int(size_t n)
+
+COREARRAY_DLL_LOCAL PyObject* numpy_new_uint8(size_t n)
+{
+	return new_array(n, NPY_UINT8);
+}
+
+COREARRAY_DLL_LOCAL PyObject* numpy_new_uint8_mat(size_t n1, size_t n2)
+{
+	npy_intp dims[2] = { n1, n2 };
+	PyObject *rv = PyArray_SimpleNew(2, dims, NPY_UINT8);
+	if (rv == NULL) throw ErrSeqArray(err_new_array);
+	return rv;
+}
+
+COREARRAY_DLL_LOCAL PyObject* numpy_new_uint8_dim3(size_t n1, size_t n2, size_t n3)
+{
+	npy_intp dims[3] = { n1, n2, n3 };
+	PyObject *rv = PyArray_SimpleNew(3, dims, NPY_UINT8);
+	if (rv == NULL) throw ErrSeqArray(err_new_array);
+	return rv;
+}
+
+
+COREARRAY_DLL_LOCAL PyObject* numpy_new_int32(size_t n)
 {
 	return new_array(n, NPY_INT32);
 }
 
+COREARRAY_DLL_LOCAL PyObject* numpy_new_int32_mat(size_t n1, size_t n2)
+{
+	npy_intp dims[2] = { n1, n2 };
+	PyObject *rv = PyArray_SimpleNew(2, dims, NPY_INT32);
+	if (rv == NULL) throw ErrSeqArray(err_new_array);
+	return rv;
+}
+
+COREARRAY_DLL_LOCAL PyObject* numpy_new_int32_dim3(size_t n1, size_t n2, size_t n3)
+{
+	npy_intp dims[3] = { n1, n2, n3 };
+	PyObject *rv = PyArray_SimpleNew(3, dims, NPY_INT32);
+	if (rv == NULL) throw ErrSeqArray(err_new_array);
+	return rv;
+}
+
+
 COREARRAY_DLL_LOCAL PyObject* numpy_new_string(size_t n)
 {
 	return new_array(n, NPY_OBJECT);
+}
+
+COREARRAY_DLL_LOCAL bool numpy_is_uint8(PyObject *obj)
+{
+	return PyArray_TYPE(obj) == NPY_UINT8;
 }
 
 COREARRAY_DLL_LOCAL void* numpy_getptr(PyObject *obj)

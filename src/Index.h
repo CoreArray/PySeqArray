@@ -411,8 +411,8 @@ public:
 	/// move to the next element
 	virtual bool Next();
 
-	/// return an R object for the next call 'ReadData()'
-	virtual PyObject* NeedRData(int &nProtected) = 0;
+	/// return a numpty array object for the next call 'ReadData()'
+	virtual PyObject* NeedArray() = 0;
 	/// read data to R object
 	virtual void ReadData(PyObject *val) = 0;
 
@@ -430,11 +430,15 @@ private:
 /// The abstract class for applying functions by variant
 class COREARRAY_DLL_LOCAL CApply_Variant: public CVarApply
 {
+protected:
+	PyObject *VarNode;  ///< Python object
 public:
 	/// constructor
 	CApply_Variant();
 	/// constructor with file information
 	CApply_Variant(CFileInfo &File);
+	/// destructor
+	~CApply_Variant();
 };
 
 
@@ -544,10 +548,23 @@ public:
 // Import the NumPy Package
 // ===========================================================
 
+const C_Int32 NA_INTEGER = 0x80000000;
+const C_UInt8 NA_UINT8   = 0xFF;
+
+
 COREARRAY_DLL_LOCAL bool numpy_init();
 
-COREARRAY_DLL_LOCAL PyObject* numpy_new_int(size_t n);
+COREARRAY_DLL_LOCAL PyObject* numpy_new_uint8(size_t n);
+COREARRAY_DLL_LOCAL PyObject* numpy_new_uint8_mat(size_t n1, size_t n2);
+COREARRAY_DLL_LOCAL PyObject* numpy_new_uint8_dim3(size_t n1, size_t n2, size_t n3);
+
+COREARRAY_DLL_LOCAL PyObject* numpy_new_int32(size_t n);
+COREARRAY_DLL_LOCAL PyObject* numpy_new_int32_mat(size_t n1, size_t n2);
+COREARRAY_DLL_LOCAL PyObject* numpy_new_int32_dim3(size_t n1, size_t n2, size_t n3);
+
 COREARRAY_DLL_LOCAL PyObject* numpy_new_string(size_t n);
+
+COREARRAY_DLL_LOCAL bool numpy_is_uint8(PyObject *obj);
 
 COREARRAY_DLL_LOCAL void* numpy_getptr(PyObject *obj);
 COREARRAY_DLL_LOCAL void numpy_setval(PyObject *obj, void *ptr, PyObject *val);
