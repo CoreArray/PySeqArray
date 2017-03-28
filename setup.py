@@ -1,10 +1,12 @@
 from distutils.core import setup, Extension
+import numpy
 import os
 import pygds
 
 
 src_fnlst = [ os.path.join('src', fn) for fn in [
-	'LinkGDS.c' ] ]
+	# 'Index.cpp',
+	'Index.cpp', 'LinkGDS.c', 'SeqArray.cpp', 'vectorization.c' ] ]
 
 
 setup(name='PySeqArray',
@@ -18,7 +20,7 @@ setup(name='PySeqArray',
 	install_requires = [ 'numpy', 'pandas', 'pygds' ],
 	ext_modules = [ Extension('PySeqArray.ccall',
 		src_fnlst,
-		include_dirs = [ pygds.get_include() ],
+		include_dirs = [ pygds.get_include(), numpy.get_include() ],
 		define_macros = [ ('USING_PYTHON', None) ],
 	) ]
 )
