@@ -143,7 +143,7 @@ static PyObject* VarGetData(CFileInfo &File, const char *name)
 			CApply_Variant_Geno NodeVar(File);
 			// set
 			rv_ans = numpy_new_uint8_dim3(nVariant, nSample, File.Ploidy());
-			C_UInt8 *base = (C_UInt8 *)numpy_getptr(rv_ans);
+			C_UInt8 *base = (C_UInt8*)numpy_getptr(rv_ans);
 			ssize_t SIZE = (ssize_t)nSample * File.Ploidy();
 			do {
 				NodeVar.ReadGenoData(base);
@@ -168,37 +168,23 @@ static PyObject* VarGetData(CFileInfo &File, const char *name)
 	{
 		// ===========================================================
 		// dosage data
-/*
+
 		ssize_t nSample  = File.SampleSelNum();
 		ssize_t nVariant = File.VariantSelNum();
 
 		if ((nSample > 0) && (nVariant > 0))
 		{
 			// initialize GDS genotype Node
-			CApply_Variant_Dosage NodeVar(File, false);
-
-			if (use_raw)
-			{
-				rv_ans = PROTECT(allocMatrix(RAWSXP, nSample, nVariant));
-				C_UInt8 *base = (C_UInt8 *)RAW(rv_ans);
-				do {
-					NodeVar.ReadDosage(base);
-					base += nSample;
-				} while (NodeVar.Next());
-			} else {
-				rv_ans = PROTECT(allocMatrix(INTSXP, nSample, nVariant));
-				int *base = INTEGER(rv_ans);
-				do {
-					NodeVar.ReadDosage(base);
-					base += nSample;
-				} while (NodeVar.Next());
-			}
-
-			SET_DIMNAMES(rv_ans, R_Dosage_Name);
-			// finally
-			UNPROTECT(1);
-		}
-*/
+			CApply_Variant_Dosage NodeVar(File);
+			// set
+			rv_ans = numpy_new_uint8_mat(nVariant, nSample);
+			C_UInt8 *base = (C_UInt8*)numpy_getptr(rv_ans);
+			do {
+				NodeVar.ReadDosage(base);
+				base += nSample;
+			} while (NodeVar.Next());
+		} else
+			rv_ans = numpy_new_uint8(0);
 
 	} else if (strcmp(name, "phase") == 0)
 	{

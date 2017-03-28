@@ -1,8 +1,9 @@
-PySeqArray: Python Interface to SeqArray Files for Data Management of Whole-Genome Sequence Variant Calls (pre-release version)
+PySeqArray: Python Interface to SeqArray Files for Data Management of Whole-Genome Sequence Variant Calls
 ===
 
 ![GPLv3](http://www.gnu.org/graphics/gplv3-88x31.png)
 [GNU General Public License, GPLv3](http://www.gnu.org/copyleft/gpl.html)
+(pre-release version)
 
 
 ## Features
@@ -15,6 +16,7 @@ The PySeqArray package is built on top of Genomic Data Structure (GDS) data form
 ## Installation
 
 ```sh
+pip install git+git://github.com/CoreArray/pygds.git
 pip install git+git://github.com/CoreArray/PySeqArray.git
 ```
 

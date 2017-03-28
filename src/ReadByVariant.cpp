@@ -305,35 +305,30 @@ void CApply_Variant_Geno::ReadData(PyObject *val)
 }
 
 
-/*
+
 // =====================================================================
 // Object for reading genotypes variant by variant
 
-CApply_Variant_Dosage::CApply_Variant_Dosage(CFileInfo &File, int use_raw):
-	CApply_Variant_Geno(File, use_raw)
+CApply_Variant_Dosage::CApply_Variant_Dosage(CFileInfo &File):
+	CApply_Variant_Geno(File)
 {
 	fVarType = ctDosage;
 	ExtPtr.reset(sizeof(int)*CellCount);
-	VarDosage = NULL;
 }
 
-void CApply_Variant_Dosage::ReadData(PyObject* val)
+PyObject* CApply_Variant_Dosage::NeedArray()
 {
-	if (TYPEOF(val) != RAWSXP)
-		ReadDosage(INTEGER(val));
+	if (!VarNode) VarNode = numpy_new_uint8(SampNum);
+	return VarNode;
+}
+
+void CApply_Variant_Dosage::ReadData(PyObject *val)
+{
+	void *ptr = numpy_getptr(val);
+	if (numpy_is_uint8(val))
+		ReadDosage((C_UInt8*)val);
 	else
-		ReadDosage(RAW(val));
-}
-
-PyObject* CApply_Variant_Dosage::NeedArray(int &nProtected)
-{
-	if (VarDosage == NULL)
-	{
-		VarDosage = UseRaw ? NEW_RAW(SampNum) : NEW_INTEGER(SampNum);
-		PROTECT(VarDosage);
-		nProtected ++;
-	}
-	return VarDosage;
+		ReadDosage((int*)ptr);
 }
 
 void CApply_Variant_Dosage::ReadDosage(int *Base)
@@ -393,7 +388,7 @@ void CApply_Variant_Dosage::ReadDosage(C_UInt8 *Base)
 }
 
 
-
+/*
 // =====================================================================
 // Object for reading phasing information variant by variant
 

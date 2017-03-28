@@ -113,14 +113,12 @@ public:
 /// Object for reading genotypes (dosages) variant by variant
 class COREARRAY_DLL_LOCAL CApply_Variant_Dosage: public CApply_Variant_Geno
 {
-protected:
-	PyObject *VarDosage;    ///< dosage R object
 public:
 	/// constructor
-	CApply_Variant_Dosage(CFileInfo &File, int use_raw);
+	CApply_Variant_Dosage(CFileInfo &File);
 
+	virtual PyObject *NeedArray();
 	virtual void ReadData(PyObject *val);
-	virtual PyObject *NeedArray(int &nProtected);
 
 	/// read dosages in 32-bit integer
 	void ReadDosage(int *Base);
