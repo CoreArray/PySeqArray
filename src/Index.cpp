@@ -1221,10 +1221,38 @@ COREARRAY_DLL_LOCAL PyObject* numpy_new_string(size_t n)
 	return new_array(n, NPY_OBJECT);
 }
 
+
+COREARRAY_DLL_LOCAL bool numpy_is_array(PyObject *obj)
+{
+	return PyArray_Check(obj) != 0;
+}
+
+COREARRAY_DLL_LOCAL bool numpy_is_array_or_list(PyObject *obj)
+{
+	return PyList_Check(obj) || PyArray_Check(obj);
+}
+
+COREARRAY_DLL_LOCAL bool numpy_is_array_int(PyObject *obj)
+{
+	if (PyArray_Check(obj))
+	{
+		int i = PyArray_TYPE(obj);
+		return (i==NPY_INT8 || i==NPY_UINT8 || i==NPY_INT16 || i==NPY_UINT16 ||
+			i==NPY_INT32 || i==NPY_UINT32 || i==NPY_INT64 || i==NPY_UINT64);
+	} else
+		return false;
+}
+
 COREARRAY_DLL_LOCAL bool numpy_is_uint8(PyObject *obj)
 {
 	return PyArray_TYPE(obj) == NPY_UINT8;
 }
+
+COREARRAY_DLL_LOCAL bool numpy_is_string(PyObject *obj)
+{
+	return PyArray_TYPE(obj) == NPY_OBJECT;
+}
+
 
 COREARRAY_DLL_LOCAL void* numpy_getptr(PyObject *obj)
 {
@@ -1237,6 +1265,78 @@ COREARRAY_DLL_LOCAL void* numpy_getptr(PyObject *obj)
 COREARRAY_DLL_LOCAL void numpy_setval(PyObject *obj, void *ptr, PyObject *val)
 {
 	PyArray_SETITEM(obj, ptr, val);
+}
+
+
+COREARRAY_DLL_LOCAL void numpy_to_int32(PyObject *obj, vector<int> &out)
+{
+	if (PyArray_Check(obj))
+	{
+		void *ptr = PyArray_DATA(obj);
+		size_t n = PyArray_SIZE(obj);
+		out.resize(n);
+		int *p = &out[0];
+		switch (PyArray_TYPE(obj))
+		{
+		case NPY_INT8:
+			for (C_Int8 *s=(C_Int8*)ptr; n > 0; n--) *p++ = *s++;
+			return;
+		case NPY_UINT8:
+			for (C_UInt8 *s=(C_UInt8*)ptr; n > 0; n--) *p++ = *s++;
+			return;
+		case NPY_INT16:
+			for (C_Int16 *s=(C_Int16*)ptr; n > 0; n--) *p++ = *s++;
+			return;
+		case NPY_UINT16:
+			for (C_UInt16 *s=(C_UInt16*)ptr; n > 0; n--) *p++ = *s++;
+			return;
+		case NPY_INT32:
+			for (C_Int32 *s=(C_Int32*)ptr; n > 0; n--) *p++ = *s++;
+			return;
+		case NPY_UINT32:
+			for (C_UInt32 *s=(C_UInt32*)ptr; n > 0; n--) *p++ = *s++;
+			return;
+		case NPY_INT64:
+			for (C_Int64 *s=(C_Int64*)ptr; n > 0; n--) *p++ = *s++;
+			return;
+		case NPY_UINT64:
+			for (C_UInt64 *s=(C_UInt64*)ptr; n > 0; n--) *p++ = *s++;
+			return;
+		}
+	}
+	throw ErrSeqArray("Fails to convert a numpty object to an integer vector.");
+}
+
+COREARRAY_DLL_LOCAL void numpy_to_string(PyObject *obj, vector<string> &out)
+{
+	if (PyArray_Check(obj))
+	{
+		PyObject **p = (PyObject**)PyArray_DATA(obj);
+		size_t n = PyArray_SIZE(obj);
+		out.resize(n);
+		for (size_t i=0; i < n; i++)
+		{
+		#if (PY_MAJOR_VERSION >= 3)
+			out[i] = PyUnicode_AsUTF8(*p++);
+		#else
+			out[i] = PyString_AsString(*p++);
+		#endif
+		}
+	} else if (PyList_Check(obj))
+	{
+		size_t n = PyList_Size(obj);
+		out.resize(n);
+		for(size_t i=0; i < n; i++)
+		{
+			PyObject *p = PyList_GetItem(obj, i);
+		#if (PY_MAJOR_VERSION >= 3)
+			out[i] = PyUnicode_AsUTF8(p);
+		#else
+			out[i] = PyString_AsString(p);
+		#endif
+		}
+	} else
+		throw ErrSeqArray("Fails to convert a numpty object to a string vector.");
 }
 
 }

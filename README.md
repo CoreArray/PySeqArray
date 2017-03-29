@@ -3,7 +3,8 @@ PySeqArray: Python Interface to SeqArray Files for Data Management of Whole-Geno
 
 ![GPLv3](http://www.gnu.org/graphics/gplv3-88x31.png)
 [GNU General Public License, GPLv3](http://www.gnu.org/copyleft/gpl.html)
-(pre-release version)
+
+pre-release version
 
 
 ## Features

@@ -33,6 +33,25 @@ class SeqArray(pygds.gdsfile):
 		cc.file_done(self.fileid)
 		pygds.gdsfile.close(self)
 
+	def FilterSet(self, sample_id=None, variant_id=None, intersect=False, verbose=True):
+		if sample_id!=None or variant_id!=None:
+			if sample_id!=None:
+				cc.set_sample(self.fileid, sample_id, intersect, verbose)
+			if variant_id!=None:
+				cc.set_variant(self.fileid, variant_id, intersect, verbose)
+
+	def FilterReset(self, sample=True, variant=True, verbose=True):
+		if sample:
+			cc.set_sample(self.fileid, None, False, verbose)
+		if variant:
+			cc.set_variant(self.fileid, None, False, verbose)
+
+	def FilterPush(reset=True):
+		cc.flt_push(self.fileid, reset)
+
+	def FilterPop():
+		cc.flt_pop(self.fileid)
+
 	def GetData(self, name):
 		return cc.get_data(self.fileid, name)
 

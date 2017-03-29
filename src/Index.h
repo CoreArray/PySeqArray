@@ -564,10 +564,19 @@ COREARRAY_DLL_LOCAL PyObject* numpy_new_int32_dim3(size_t n1, size_t n2, size_t 
 
 COREARRAY_DLL_LOCAL PyObject* numpy_new_string(size_t n);
 
-COREARRAY_DLL_LOCAL bool numpy_is_uint8(PyObject *obj);
+COREARRAY_DLL_LOCAL bool numpy_is_array(PyObject *obj);
+COREARRAY_DLL_LOCAL bool numpy_is_array_or_list(PyObject *obj);
+COREARRAY_DLL_LOCAL bool numpy_is_array_int(PyObject *obj);
+
+COREARRAY_DLL_LOCAL bool numpy_is_uint8(PyObject *obj);   // assuming obj is PyArray
+COREARRAY_DLL_LOCAL bool numpy_is_string(PyObject *obj);  // assuming obj is PyArray
+
 
 COREARRAY_DLL_LOCAL void* numpy_getptr(PyObject *obj);
 COREARRAY_DLL_LOCAL void numpy_setval(PyObject *obj, void *ptr, PyObject *val);
+
+COREARRAY_DLL_LOCAL void numpy_to_int32(PyObject *obj, vector<int> &out);
+COREARRAY_DLL_LOCAL void numpy_to_string(PyObject *obj, vector<string> &out);
 
 }
 

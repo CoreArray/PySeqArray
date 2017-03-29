@@ -29,6 +29,8 @@
 #include <ctype.h>
 
 
+#define PY_EXPORT    static
+
 
 // ===========================================================
 // Library Functions
@@ -46,7 +48,7 @@ using namespace PySeqArray;
 // ===========================================================
 
 /// initialize a SeqArray file
-COREARRAY_DLL_EXPORT PyObject* SEQ_File_Init(PyObject *self, PyObject *args)
+PY_EXPORT PyObject* SEQ_File_Init(PyObject *self, PyObject *args)
 {
 	int file_id;
 	if (!PyArg_ParseTuple(args, "i", &file_id))
@@ -58,7 +60,7 @@ COREARRAY_DLL_EXPORT PyObject* SEQ_File_Init(PyObject *self, PyObject *args)
 }
 
 /// finalize a SeqArray file
-COREARRAY_DLL_EXPORT PyObject* SEQ_File_Done(PyObject *self, PyObject *args)
+PY_EXPORT PyObject* SEQ_File_Done(PyObject *self, PyObject *args)
 {
 	int file_id;
 	if (!PyArg_ParseTuple(args, "i", &file_id))
@@ -72,53 +74,40 @@ COREARRAY_DLL_EXPORT PyObject* SEQ_File_Done(PyObject *self, PyObject *args)
 }
 
 
-/*
+
 // ===========================================================
 // Set a working space
 // ===========================================================
 
 /// push the current filter to the stack
-COREARRAY_DLL_EXPORT SEXP SEQ_FilterPushEmpty(SEXP gdsfile)
+PY_EXPORT PyObject* SEQ_FilterPush(PyObject *self, PyObject *args)
 {
+	int file_id;
+	int new_flag;
+	if (!PyArg_ParseTuple(args, "i" BSTR, &file_id, &new_flag)) return NULL;
+
 	COREARRAY_TRY
-		int id = Rf_asInteger(RGetListElement(gdsfile, "id"));
-		map<int, CFileInfo>::iterator it =
-			GDSFile_ID_Info.find(id);
+		map<int, CFileInfo>::iterator it = GDSFile_ID_Info.find(file_id);
 		if (it != GDSFile_ID_Info.end())
 		{
-			it->second.SelList.push_back(TSelection());
-		} else
-			throw ErrSeqArray("The GDS file is closed or invalid.");
-	COREARRAY_CATCH
-}
-
-
-/// push the current filter to the stack
-COREARRAY_DLL_EXPORT SEXP SEQ_FilterPushLast(SEXP gdsfile)
-{
-	COREARRAY_TRY
-		int id = Rf_asInteger(RGetListElement(gdsfile, "id"));
-		map<int, CFileInfo>::iterator it =
-			GDSFile_ID_Info.find(id);
-		if (it != GDSFile_ID_Info.end())
-		{
-			if (!it->second.SelList.empty())
-				it->second.SelList.push_back(it->second.SelList.back());
-			else
+			if (new_flag || it->second.SelList.empty())
 				it->second.SelList.push_back(TSelection());
+			else
+				it->second.SelList.push_back(it->second.SelList.back());
 		} else
 			throw ErrSeqArray("The GDS file is closed or invalid.");
-	COREARRAY_CATCH
+	COREARRAY_CATCH_NONE
 }
 
 
 /// pop up the previous filter from the stack
-COREARRAY_DLL_EXPORT SEXP SEQ_FilterPop(SEXP gdsfile)
+PY_EXPORT PyObject* SEQ_FilterPop(PyObject *self, PyObject *args)
 {
+	int file_id;
+	if (!PyArg_ParseTuple(args, "i", &file_id)) return NULL;
+
 	COREARRAY_TRY
-		int id = Rf_asInteger(RGetListElement(gdsfile, "id"));
-		map<int, CFileInfo>::iterator it =
-			GDSFile_ID_Info.find(id);
+		map<int, CFileInfo>::iterator it = GDSFile_ID_Info.find(file_id);
 		if (it != GDSFile_ID_Info.end())
 		{
 			if (it->second.SelList.size() <= 1)
@@ -126,109 +115,102 @@ COREARRAY_DLL_EXPORT SEXP SEQ_FilterPop(SEXP gdsfile)
 			it->second.SelList.pop_back();
 		} else
 			throw ErrSeqArray("The GDS file is closed or invalid.");
-	COREARRAY_CATCH
+	COREARRAY_CATCH_NONE
 }
 
 
 /// set a working space with selected sample id
-COREARRAY_DLL_EXPORT SEXP SEQ_SetSpaceSample(SEXP gdsfile, SEXP samp_id,
-	SEXP intersect, SEXP verbose)
+PY_EXPORT PyObject* SEQ_SetSpaceSample(PyObject *self, PyObject *args)
 {
-	int intersect_flag = Rf_asLogical(intersect);
+	int file_id;
+	PyObject *samp_id;
+	int intersect, verbose;
+	if (!PyArg_ParseTuple(args, "iO" BSTR BSTR, &file_id, &samp_id, &intersect, &verbose))
+		return NULL;
 
 	COREARRAY_TRY
 
-		CFileInfo &File = GetFileInfo(gdsfile);
+		CFileInfo &File = GetFileInfo(file_id);
 		TSelection &Sel = File.Selection();
 		C_BOOL *pArray = Sel.pSample();
 		int Count = File.SampleNum();
 		PdAbstractArray varSamp = File.GetObj("sample.id", TRUE);
 
-		if (Rf_isInteger(samp_id))
-		{
-			// initialize
-			set<int> set_id;
-			set_id.insert(INTEGER(samp_id), INTEGER(samp_id) + XLENGTH(samp_id));
-			// sample id
-			vector<int> sample_id(Count);
-			C_Int32 _st=0, _cnt=Count;
-			GDS_Array_ReadData(varSamp, &_st, &_cnt, &sample_id[0], svInt32);
-
-			// set selection
-			if (!intersect_flag)
-			{
-				for (int i=0; i < Count; i++)
-					*pArray++ = (set_id.find(sample_id[i]) != set_id.end());
-			} else {
-				for (int i=0; i < Count; i++, pArray++)
-				{
-					if (*pArray)
-						*pArray = (set_id.find(sample_id[i]) != set_id.end());
-				}
-			}
-		} else if (Rf_isReal(samp_id))
-		{
-			// initialize
-			set<double> set_id;
-			set_id.insert(REAL(samp_id), REAL(samp_id) + XLENGTH(samp_id));
-			// sample id
-			vector<double> sample_id(Count);
-			C_Int32 _st=0, _cnt=Count;
-			GDS_Array_ReadData(varSamp, &_st, &_cnt, &sample_id[0], svFloat64);
-
-			// set selection
-			if (!intersect_flag)
-			{
-				for (int i=0; i < Count; i++)
-					*pArray++ = (set_id.find(sample_id[i]) != set_id.end());
-			} else {
-				for (int i=0; i < Count; i++, pArray++)
-				{
-					if (*pArray)
-						*pArray = (set_id.find(sample_id[i]) != set_id.end());
-				}
-			}
-		} else if (Rf_isString(samp_id))
-		{
-			// initialize
-			set<string> set_id;
-			R_xlen_t m = XLENGTH(samp_id);
-			for (R_xlen_t i=0; i < m; i++)
-				set_id.insert(string(CHAR(STRING_ELT(samp_id, i))));
-			// sample id
-			vector<string> sample_id(Count);
-			C_Int32 _st=0, _cnt=Count;
-			GDS_Array_ReadData(varSamp, &_st, &_cnt, &sample_id[0], svStrUTF8);
-
-			// set selection
-			if (!intersect_flag)
-			{
-				for (int i=0; i < Count; i++)
-					*pArray++ = (set_id.find(sample_id[i]) != set_id.end());
-			} else {
-				for (int i=0; i < Count; i++, pArray++)
-				{
-					if (*pArray)
-						*pArray = (set_id.find(sample_id[i]) != set_id.end());
-				}
-			}
-		} else if (Rf_isNull(samp_id))
+		if (samp_id == Py_None)
 		{
 			memset(pArray, TRUE, Count);
+		} else if (numpy_is_array_or_list(samp_id))
+		{
+			if (numpy_is_array_int(samp_id))
+			{
+				// initialize
+				set<int> set_id;
+				{
+					vector<int> ary;
+					numpy_to_int32(samp_id, ary);
+					set_id.insert(ary.begin(), ary.end());
+				}
+
+				// sample id
+				vector<int> sample_id(Count);
+				C_Int32 _st=0, _cnt=Count;
+				GDS_Array_ReadData(varSamp, &_st, &_cnt, &sample_id[0], svInt32);
+
+				// set selection
+				if (!intersect)
+				{
+					for (int i=0; i < Count; i++)
+						*pArray++ = (set_id.find(sample_id[i]) != set_id.end());
+				} else {
+					for (int i=0; i < Count; i++, pArray++)
+					{
+						if (*pArray)
+							*pArray = (set_id.find(sample_id[i]) != set_id.end());
+					}
+				}
+			} else {
+				// initialize
+				set<string> set_id;
+				{
+					vector<string> ary;
+					numpy_to_string(samp_id, ary);
+					set_id.insert(ary.begin(), ary.end());
+				}
+
+				// sample id
+				vector<string> sample_id(Count);
+				C_Int32 _st=0, _cnt=Count;
+				GDS_Array_ReadData(varSamp, &_st, &_cnt, &sample_id[0], svStrUTF8);
+
+				// set selection
+				if (!intersect)
+				{
+					for (int i=0; i < Count; i++)
+						*pArray++ = (set_id.find(sample_id[i]) != set_id.end());
+				} else {
+					for (int i=0; i < Count; i++, pArray++)
+					{
+						if (*pArray)
+							*pArray = (set_id.find(sample_id[i]) != set_id.end());
+					}
+				}
+			}
 		} else
 			throw ErrSeqArray("Invalid type of 'sample.id'.");
 
-		int n = File.SampleSelNum();
-		if (Rf_asLogical(verbose) == TRUE)
-			Rprintf("# of selected samples: %s\n", PrettyInt(n));
+		if (verbose)
+		{
+			int n = File.SampleSelNum();
+			printf("# of selected samples: %s\n", PrettyInt(n));
+		}
 
-	COREARRAY_CATCH
+	COREARRAY_CATCH_NONE;
 }
 
-
+/*
 /// set a working space with selected sample id (logical/raw vector, or index)
-COREARRAY_DLL_EXPORT SEXP SEQ_SetSpaceSample2(SEXP gdsfile, SEXP samp_sel,
-	SEXP intersect, SEXP verbose)
+PY_EXPORT PyObject* SEQ_SetSpaceSample2(PyObject* gdsfile, PyObject* samp_sel,
+	PyObject* intersect, PyObject* verbose)
 {
 	int intersect_flag = Rf_asLogical(intersect);
 
@@ -348,8 +330,8 @@ COREARRAY_DLL_EXPORT SEXP SEQ_SetSpaceSample2(SEXP gdsfile, SEXP samp_sel,
 
 
 /// set a working space with selected variant id
-COREARRAY_DLL_EXPORT SEXP SEQ_SetSpaceVariant(SEXP gdsfile, SEXP var_id,
-	SEXP intersect, SEXP verbose)
+PY_EXPORT PyObject* SEQ_SetSpaceVariant(PyObject* gdsfile, PyObject* var_id,
+	PyObject* intersect, PyObject* verbose)
 {
 	int intersect_flag = Rf_asLogical(intersect);
 
@@ -445,8 +427,8 @@ COREARRAY_DLL_EXPORT SEXP SEQ_SetSpaceVariant(SEXP gdsfile, SEXP var_id,
 
 
 /// set a working space with selected variant id (logical/raw vector, or index)
-COREARRAY_DLL_EXPORT SEXP SEQ_SetSpaceVariant2(SEXP gdsfile, SEXP var_sel,
-	SEXP intersect, SEXP verbose)
+PY_EXPORT PyObject* SEQ_SetSpaceVariant2(PyObject* gdsfile, PyObject* var_sel,
+	PyObject* intersect, PyObject* verbose)
 {
 	int intersect_flag = Rf_asLogical(intersect);
 
@@ -575,8 +557,8 @@ static bool is_numeric(const string &txt)
 }
 
 /// set a working space flag with selected chromosome(s)
-COREARRAY_DLL_EXPORT SEXP SEQ_SetChrom(SEXP gdsfile, SEXP include,
-	SEXP is_num, SEXP frombp, SEXP tobp, SEXP intersect, SEXP verbose)
+PY_EXPORT PyObject* SEQ_SetChrom(PyObject* gdsfile, PyObject* include,
+	PyObject* is_num, PyObject* frombp, PyObject* tobp, PyObject* intersect, PyObject* verbose)
 {
 	int nProtected = 0;
 	int *pFrom=NULL, *pTo=NULL;
@@ -742,7 +724,7 @@ COREARRAY_DLL_EXPORT SEXP SEQ_SetChrom(SEXP gdsfile, SEXP include,
 // ================================================================
 
 /// set a working space flag with selected variant id
-COREARRAY_DLL_EXPORT SEXP SEQ_GetSpace(SEXP gdsfile, SEXP UseRaw)
+PY_EXPORT PyObject* SEQ_GetSpace(PyObject* gdsfile, PyObject* UseRaw)
 {
 	int use_raw_flag = Rf_asLogical(UseRaw);
 	if (use_raw_flag == NA_LOGICAL)
@@ -755,7 +737,7 @@ COREARRAY_DLL_EXPORT SEXP SEQ_GetSpace(SEXP gdsfile, SEXP UseRaw)
 
 		// output
 		PROTECT(rv_ans = NEW_LIST(2));
-		SEXP tmp;
+		PyObject* tmp;
 
 		// sample selection
 		size_t n = File.SampleNum();
@@ -818,8 +800,8 @@ inline static C_BOOL *SKIP_SELECTION(size_t num, C_BOOL *p)
 }
 
 /// split the selected variants according to multiple processes
-COREARRAY_DLL_EXPORT SEXP SEQ_SplitSelection(SEXP gdsfile, SEXP split,
-	SEXP index, SEXP n_process, SEXP selection_flag)
+PY_EXPORT PyObject* SEQ_SplitSelection(PyObject* gdsfile, PyObject* split,
+	PyObject* index, PyObject* n_process, PyObject* selection_flag)
 {
 	const char *split_str = CHAR(STRING_ELT(split, 0));
 	int Process_Index = Rf_asInteger(index) - 1;  // starting from 0
@@ -904,7 +886,7 @@ COREARRAY_DLL_EXPORT SEXP SEQ_SplitSelection(SEXP gdsfile, SEXP split,
 
 
 /// set a working space with selected variant id
-COREARRAY_DLL_EXPORT SEXP SEQ_Summary(SEXP gdsfile, SEXP varname)
+PY_EXPORT PyObject* SEQ_Summary(PyObject* gdsfile, PyObject* varname)
 {
 	COREARRAY_TRY
 
@@ -931,7 +913,7 @@ COREARRAY_DLL_EXPORT SEXP SEQ_Summary(SEXP gdsfile, SEXP varname)
 
 			PROTECT(rv_ans = NEW_LIST(2));
 
-				SEXP I32 = PROTECT(NEW_INTEGER(3));
+				PyObject* I32 = PROTECT(NEW_INTEGER(3));
 				SET_ELEMENT(rv_ans, 0, I32);
 				C_Int32 Buf[4];
 				GDS_Array_GetDim(vGeno, Buf, 3);
@@ -939,13 +921,13 @@ COREARRAY_DLL_EXPORT SEXP SEQ_Summary(SEXP gdsfile, SEXP varname)
 				INTEGER(I32)[1] = Sel.Sample.size();
 				INTEGER(I32)[2] = Sel.Variant.size();
 
-				SEXP S32 = PROTECT(NEW_INTEGER(3));
+				PyObject* S32 = PROTECT(NEW_INTEGER(3));
 				SET_ELEMENT(rv_ans, 1, S32);
 				INTEGER(S32)[0] = Buf[2];
 				INTEGER(S32)[1] = GetNumOfTRUE(&Sel.Sample[0], Sel.Sample.size());
 				INTEGER(S32)[2] = GetNumOfTRUE(&Sel.Variant[0], Sel.Variant.size());
 
-			SEXP tmp = PROTECT(NEW_CHARACTER(2));
+			PyObject* tmp = PROTECT(NEW_CHARACTER(2));
 				SET_STRING_ELT(tmp, 0, mkChar("dim"));
 				SET_STRING_ELT(tmp, 1, mkChar("seldim"));
 				SET_NAMES(rv_ans, tmp);
@@ -961,7 +943,7 @@ COREARRAY_DLL_EXPORT SEXP SEQ_Summary(SEXP gdsfile, SEXP varname)
 
 
 /// get a logical vector with selection
-COREARRAY_DLL_EXPORT SEXP SEQ_SelectFlag(SEXP select, SEXP len)
+PY_EXPORT PyObject* SEQ_SelectFlag(PyObject* select, PyObject* len)
 {
 	R_len_t n = XLENGTH(select);
 	if (XLENGTH(len) != n)
@@ -974,7 +956,7 @@ COREARRAY_DLL_EXPORT SEXP SEQ_SelectFlag(SEXP select, SEXP len)
 		if (*p > 0) m += *p;
 	}
 
-	SEXP rv_ans = NEW_LOGICAL(m);
+	PyObject* rv_ans = NEW_LOGICAL(m);
 	int *r = INTEGER(rv_ans), *s = INTEGER(select);
 	p = INTEGER(len);
 	for (; n > 0; n--, s++, p++)
@@ -991,7 +973,7 @@ COREARRAY_DLL_EXPORT SEXP SEQ_SelectFlag(SEXP select, SEXP len)
 // get system configuration
 // ===========================================================
 
-COREARRAY_DLL_EXPORT SEXP SEQ_IntAssign(SEXP Dst, SEXP Src)
+PY_EXPORT PyObject* SEQ_IntAssign(PyObject* Dst, PyObject* Src)
 {
 	INTEGER(Dst)[0] = Rf_asInteger(Src);
 	return R_NilValue;
@@ -1014,14 +996,14 @@ inline static void CvtDNAString(char *p)
 	}
 }
 
-COREARRAY_DLL_EXPORT SEXP SEQ_DNAStrSet(SEXP x)
+PY_EXPORT PyObject* SEQ_DNAStrSet(PyObject* x)
 {
 	if (Rf_isVectorList(x))
 	{
 		size_t nlen = XLENGTH(x);	
 		for (size_t i=0; i < nlen; i++)
 		{
-			SEXP s = VECTOR_ELT(x, i);
+			PyObject* s = VECTOR_ELT(x, i);
 			if (Rf_isString(s))
 			{
 				size_t n = XLENGTH(s);
@@ -1046,13 +1028,13 @@ COREARRAY_DLL_EXPORT SEXP SEQ_DNAStrSet(SEXP x)
 // ===========================================================
 
 /// the number of alleles per site
-COREARRAY_DLL_EXPORT SEXP SEQ_System()
+PY_EXPORT PyObject* SEQ_System()
 {
 	COREARRAY_TRY
 
 		int nProtect = 0;
 		rv_ans = PROTECT(NEW_LIST(2));
-		SEXP nm = PROTECT(NEW_CHARACTER(2));
+		PyObject* nm = PROTECT(NEW_CHARACTER(2));
 		nProtect += 2;
 		SET_NAMES(rv_ans, nm);
 
@@ -1093,7 +1075,7 @@ COREARRAY_DLL_EXPORT SEXP SEQ_System()
 	#ifdef COREARRAY_SIMD_FMA4
 		ss.push_back("FMA4");
 	#endif
-		SEXP SIMD = PROTECT(NEW_CHARACTER(ss.size()));
+		PyObject* SIMD = PROTECT(NEW_CHARACTER(ss.size()));
 		nProtect ++;
 		SET_ELEMENT(rv_ans, 1, SIMD);
 		SET_STRING_ELT(nm, 1, mkChar("compiler.flag"));
@@ -1104,24 +1086,7 @@ COREARRAY_DLL_EXPORT SEXP SEQ_System()
 
 	COREARRAY_CATCH
 }
-
-
-// ===========================================================
-// initialize R objects when the package is loaded
-// ===========================================================
-
-COREARRAY_DLL_EXPORT SEXP SEQ_Pkg_Init(SEXP dim_name)
-{
-	R_Geno_Dim2_Name = VECTOR_ELT(dim_name, 0);
-	R_Geno_Dim3_Name = VECTOR_ELT(dim_name, 1);
-	R_Dosage_Name = VECTOR_ELT(dim_name, 2);
-	R_Data_Name = VECTOR_ELT(dim_name, 3);
-	R_Data_Dim2_Name = VECTOR_ELT(dim_name, 4);
-	return R_NilValue;
-}
-
 */
-
 
 
 // ===========================================================
@@ -1135,8 +1100,16 @@ extern PyObject* SEQ_GetData(PyObject *self, PyObject *args);
 
 static PyMethodDef module_methods[] = {
 	// file operations
-    { "file_init", (PyCFunction)SEQ_File_Init, METH_VARARGS, NULL },
-    { "file_done", (PyCFunction)SEQ_File_Done, METH_VARARGS, NULL },
+	{ "file_init", (PyCFunction)SEQ_File_Init, METH_VARARGS, NULL },
+	{ "file_done", (PyCFunction)SEQ_File_Done, METH_VARARGS, NULL },
+
+	{ "flt_push", (PyCFunction)SEQ_FilterPush, METH_VARARGS, NULL },
+	{ "flt_pop", (PyCFunction)SEQ_FilterPop, METH_VARARGS, NULL },
+
+	{ "set_sample", (PyCFunction)SEQ_SetSpaceSample, METH_VARARGS, NULL },
+	// { "set_variant", (PyCFunction)SEQ_SetSpaceVariant, METH_VARARGS, NULL },
+
+
 	// get data
     { "get_data", (PyCFunction)SEQ_GetData, METH_VARARGS, NULL },
 
