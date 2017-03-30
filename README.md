@@ -24,7 +24,7 @@ pip install git+git://github.com/CoreArray/PySeqArray.git
 
 ## Citation
 
-#### Original papers (implemented in R/Bioconductor):
+#### Original paper (implemented in an [R/Bioconductor](http://bioconductor.org/packages/SeqArray) package):
 
 Zheng X, Gogarten S, Lawrence M, Stilp A, Conomos M, Weir BS, Laurie C, Levine D (2017). SeqArray -- A storage-efficient high-performance data format for WGS variant calls. *Bioinformatics*. [DOI: 10.1093/bioinformatics/btx145](http://dx.doi.org/10.1093/bioinformatics/btx145).
 
@@ -35,4 +35,6 @@ Zheng X, Gogarten S, Lawrence M, Stilp A, Conomos M, Weir BS, Laurie C, Levine D
 
 
 ## Examples
+
+More examples will be posted here.
 
