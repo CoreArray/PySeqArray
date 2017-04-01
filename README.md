@@ -3,6 +3,7 @@ PySeqArray: Python Interface to SeqArray Files for Data Management of Whole-Geno
 
 ![GPLv3](http://www.gnu.org/graphics/gplv3-88x31.png)
 [GNU General Public License, GPLv3](http://www.gnu.org/copyleft/gpl.html)
+[![Build Status](https://travis-ci.org/CoreArray/PySeqArray.png)](https://travis-ci.org/CoreArray/PySeqArray)
 
 pre-release version
 
@@ -17,7 +18,9 @@ The SeqArray format is built on top of Genomic Data Structure (GDS) data format,
 ## Installation
 
 ```sh
+## require the pygds package
 pip install git+git://github.com/CoreArray/pygds.git
+## install PySeqArray
 pip install git+git://github.com/CoreArray/PySeqArray.git
 ```
 
