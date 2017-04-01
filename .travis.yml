@@ -3,6 +3,6 @@ python:
   - "3.6"
   - "nightly" # currently points to 3.7-dev
 # command to install dependencies
-install: "pip install numpy"
+install: "pip install git+git://github.com/CoreArray/pygds.git"
 # command to run tests
 script: "pip install ."
