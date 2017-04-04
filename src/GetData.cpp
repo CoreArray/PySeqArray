@@ -67,10 +67,10 @@ static PyObject* VarGetData(CFileInfo &File, const char *name)
 	} else if (strcmp(name, "position") == 0)
 	{
 		int n = File.VariantSelNum();
+		rv_ans = numpy_new_int32(n);
 		if (n > 0)
 		{
 			const int *base = &File.Position()[0];
-			rv_ans = numpy_new_int32(n);
 			int *p = (int*)numpy_getptr(rv_ans);
 			C_BOOL *s = Sel.pVariant();
 			for (size_t m=File.VariantNum(); m > 0; m--)
@@ -78,16 +78,15 @@ static PyObject* VarGetData(CFileInfo &File, const char *name)
 				if (*s++) *p++ = *base;
 				base ++;
 			}
-		} else
-			rv_ans = numpy_new_int32(0);
+		}
 
 	} else if (strcmp(name, "chromosome") == 0)
 	{
 		int n = File.VariantSelNum();
+		rv_ans = numpy_new_string(n);
 		if (n > 0)
 		{
 			CChromIndex &Chrom = File.Chromosome();
-			rv_ans = numpy_new_string(n);
 			PyObject **p = (PyObject**)numpy_getptr(rv_ans);
 			C_BOOL *s = Sel.pVariant();
 			size_t m = File.VariantNum();
@@ -108,8 +107,7 @@ static PyObject* VarGetData(CFileInfo &File, const char *name)
 					numpy_setval(rv_ans, p++, last);
 				}
 			}
-		} else
-			rv_ans = numpy_new_string(0);
+		}
 	
 	} else if ( (strcmp(name, "variant.id")==0) ||
 		(strcmp(name, "allele")==0) ||
