@@ -10,9 +10,9 @@ import PySeqArray.ccall as cc
 # ===========================================================================
 
 class SeqArray(pygds.gdsfile):
-	'''
+	"""
 	Class for SeqArray GDS files
-	'''
+	"""
 
 	def __init__(self):
 		pygds.gdsfile.__init__(self)
@@ -25,11 +25,44 @@ class SeqArray(pygds.gdsfile):
 		raise Exception('not supported!')
 
 	def open(self, filename, readonly=True, allow_dup=False):
+		"""Open an SeqArray file
+
+		Open an existing file of SeqArray GDS for reading or writing.
+
+		Parameters
+		----------
+		filename : str
+			the file name of a new GDS file to be created
+		readonly : bool
+			if True, the file is opened read-only; otherwise, it is allowed to write data to the file
+		allow_dup : bool
+			if True, it is allowed to open a GDS file with read-only mode when it has been opened in the same session
+
+		Returns
+		-------
+		None
+
+		See Also
+		--------
+		close: close a SeqArray file
+		"""
 		pygds.gdsfile.open(self, filename, readonly, allow_dup)
 		cc.file_init(self.fileid)
 		# TODO: file checking
 
 	def close(self):
+		"""Close a SeqArray file
+
+		Close a SeqArray GDS file.
+
+		Returns
+		-------
+		None
+
+		See Also
+		--------
+		open : open an existing SeqArray file
+		"""
 		cc.file_done(self.fileid)
 		pygds.gdsfile.close(self)
 
@@ -47,6 +80,8 @@ class SeqArray(pygds.gdsfile):
 			cc.set_variant(self.fileid, None, False, verbose)
 
 	def FilterPush(reset=True):
+		"""
+		"""
 		cc.flt_push(self.fileid, reset)
 
 	def FilterPop():
