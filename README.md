@@ -46,5 +46,49 @@ Zheng X, Gogarten S, Lawrence M, Stilp A, Conomos M, Weir BS, Laurie C, Levine D
 
 ## Examples
 
-More examples will be posted here.
+```python
+import PySeqArray as ps
+
+fn = ps.get_example_path('1KG_phase1_release_v3_chr22.gds')
+f = ps.SeqArrayFile()
+f.open(fn)
+f.show()
+f.close()
+```
+
+```
+File: PySeqArray/data/1KG_phase1_release_v3_chr22.gds (1.1M)
++    [  ] *
+|--+ description   [  ] *
+|--+ sample.id   { Str8 1092 LZMA_ra(10.5%), 914B } *
+|--+ variant.id   { Int32 19773 LZMA_ra(8.39%), 6.5K } *
+|--+ position   { Int32 19773 LZMA_ra(52.0%), 40.1K } *
+|--+ chromosome   { Str8 19773 LZMA_ra(0.28%), 166B } *
+|--+ allele   { Str8 19773 LZMA_ra(22.7%), 109.2K } *
+|--+ genotype   [  ] *
+|  |--+ data   { Bit2 19773x1092x2 LZMA_ra(8.17%), 861.8K } *
+|  |--+ extra.index   { Int32 0x3 LZMA_ra, 19B } *
+|  \--+ extra   { Int16 0 LZMA_ra, 19B }
+|--+ phase   [  ]
+|  |--+ data   { Bit1 19773x1092 LZMA_ra(0.02%), 550B } *
+|  |--+ extra.index   { Int32 0x3 LZMA_ra, 19B } *
+|  \--+ extra   { Bit1 0 LZMA_ra, 19B }
+|--+ annotation   [  ]
+|  |--+ id   { Str8 19773 LZMA_ra(35.2%), 75.2K } *
+|  |--+ qual   { Float32 19773 LZMA_ra(3.62%), 2.8K } *
+|  |--+ filter   { Int32,factor 19773 LZMA_ra(0.21%), 170B } *
+|  |--+ info   [  ]
+|  \--+ format   [  ]
+\--+ sample.annotation   [  ]
+   |--+ Family.ID   { Str8 1092 LZMA_ra(15.3%), 1.1K }
+   |--+ Population   { Str8 1092 LZMA_ra(5.08%), 222B }
+   |--+ Population.Description   { Str8 1092 LZMA_ra(1.74%), 566B }
+   |--+ Gender   { Str8 1092 LZMA_ra(5.85%), 386B }
+   |--+ Relationship   { Str8 1092 LZMA_ra(6.80%), 342B }
+   |--+ Non.Paternity   { Str8 1092 LZMA_ra(11.9%), 134B }
+   |--+ Siblings   { Str8 1092 LZMA_ra(19.1%), 266B }
+   |--+ Grandparents   { Str8 1092 LZMA_ra(10.5%), 118B }
+   |--+ Avuncular   { Str8 1092 LZMA_ra(17.3%), 250B }
+   \--+ Half.Siblings   { Str8 1092 LZMA_ra(11.0%), 122B }
+```
 

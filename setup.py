@@ -22,5 +22,8 @@ setup(name='PySeqArray',
 		src_fnlst,
 		include_dirs = [ pygds.get_include(), numpy.get_include() ],
 		define_macros = [ ('USING_PYTHON', None) ],
-	) ]
+	) ],
+	package_data = {
+		'PySeqArray': [ 'data/*.gds' ]
+	}
 )

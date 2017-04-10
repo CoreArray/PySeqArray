@@ -1,5 +1,7 @@
 # import numpy
 import numpy as np
+# import os
+import os
 # import pygds
 import pygds
 # import c library
@@ -7,9 +9,38 @@ import PySeqArray.ccall as cc
 
 
 
+
 # ===========================================================================
 
-class SeqArray(pygds.gdsfile):
+def get_example_path(filename=None):
+	"""Example files
+
+	Return a file name in the folder of example data.
+
+	Parameters
+	----------
+	filename : str
+		a file name in the folder of example data, or None for returning the path of example folder
+
+	Returns
+	-------
+	string
+
+	Examples
+	--------
+	>>> get_example_path('1KG_phase1_release_v3_chr22.gds')
+	"""
+	import PySeqArray
+	s = os.path.dirname(PySeqArray.__file__)
+	if filename == None:
+		return os.path.join(s, 'data')
+	else:
+		return os.path.join(s, 'data', filename)
+
+
+# ===========================================================================
+
+class SeqArrayFile(pygds.gdsfile):
 	"""
 	Class for SeqArray GDS files
 	"""
