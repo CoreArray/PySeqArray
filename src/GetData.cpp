@@ -338,9 +338,9 @@ static PyObject* VarGetData(CFileInfo &File, const char *name)
 		char buf2[1024] = { 0 };
 		char *p1 = buf1, *p2 = buf2;
 		int dup = 0;
-		rv_ans = numpy_new_string(n1);
+		rv_ans = numpy_new_string(n);
 		PyObject **p = (PyObject**)numpy_getptr(rv_ans);
-		for (size_t i=0; i < (size_t)n1; i++,p++)
+		for (size_t i=0; i < (size_t)n; i++,p++)
 		{
 			snprintf(p1, sizeof(buf1), "%s_%d", chr[i].c_str(), pos[i]);
 			if (strcmp(p1, p2) == 0)
