@@ -98,6 +98,30 @@ class SeqArrayFile(pygds.gdsfile):
 		pygds.gdsfile.close(self)
 
 	def FilterSet(self, sample_id=None, variant_id=None, intersect=False, verbose=True):
+		"""Set a filter
+
+		Sets a filter to sample and/or variant.
+
+		Parameters
+		----------
+		sample_id : str
+			sample id to be selected
+		variant_id : bool
+			variant id to be selected
+		intersect : bool
+			if False, the candidate variants for selection are all possible variants (by default);
+			if True, the candidate variants are from the selected variants defined via the previous call
+		verbose : bool
+			if True, show information
+
+		Returns
+		-------
+		None
+
+		See Also
+		--------
+		FilterReset : reset the filter
+		"""
 		if sample_id!=None or variant_id!=None:
 			if sample_id!=None:
 				cc.set_sample(self.fileid, sample_id, intersect, verbose)
@@ -105,6 +129,27 @@ class SeqArrayFile(pygds.gdsfile):
 				cc.set_variant(self.fileid, variant_id, intersect, verbose)
 
 	def FilterReset(self, sample=True, variant=True, verbose=True):
+		"""Reset the filter
+
+		Clear the existing filter on sample and/or variant.
+
+		Parameters
+		----------
+		sample : str
+			if True, reset the filter of sample
+		variant : bool
+			if True, reset the filter of variant
+		verbose : bool
+			if True, show information
+
+		Returns
+		-------
+		None
+
+		See Also
+		--------
+		FilterSet : set a filter
+		"""
 		if sample:
 			cc.set_sample(self.fileid, None, False, verbose)
 		if variant:

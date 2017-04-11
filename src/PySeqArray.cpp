@@ -1,6 +1,6 @@
 // ===========================================================
 //
-// SeqArray.cpp: the C/C++ codes for the PySeqArray package
+// PySeqArray.cpp: the C/C++ codes for the PySeqArray package
 //
 // Copyright (C) 2017    Xiuwen Zheng
 //
@@ -1144,7 +1144,7 @@ PyMODINIT_FUNC initccall()
 #if PY_MAJOR_VERSION >= 3
 	mod = PyModule_Create(&ModStruct);
 #else
-	mod = Py_InitModule("pygds.ccall", module_methods);
+	mod = Py_InitModule("PySeqArray.ccall", module_methods);
 #endif
 
 	return mod;
