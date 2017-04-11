@@ -156,11 +156,38 @@ class SeqArrayFile(pygds.gdsfile):
 			cc.set_variant(self.fileid, None, False, verbose)
 
 	def FilterPush(reset=True):
-		"""
+		"""Push a filter
+
+		Push the current filter to the stack.
+
+		Parameters
+		----------
+		reset : bool
+			if True, reset the filter of sample and variant after pushing
+
+		Returns
+		-------
+		None
+
+		See Also
+		--------
+		FilterPop : recover the last filter
 		"""
 		cc.flt_push(self.fileid, reset)
 
 	def FilterPop():
+		"""Pop a filter
+
+		Pop or recover the last filter in the stack.
+
+		Returns
+		-------
+		None
+
+		See Also
+		--------
+		FilterPush : push the current filter to the stack
+		"""
 		cc.flt_pop(self.fileid)
 
 	def GetData(self, name):

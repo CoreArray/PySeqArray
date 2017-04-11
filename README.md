@@ -33,10 +33,6 @@ pip install git+git://github.com/CoreArray/PySeqArray.git
 
 Zheng X, Gogarten S, Lawrence M, Stilp A, Conomos M, Weir BS, Laurie C, Levine D (2017). SeqArray -- A storage-efficient high-performance data format for WGS variant calls. *Bioinformatics*. [DOI: 10.1093/bioinformatics/btx145](http://dx.doi.org/10.1093/bioinformatics/btx145).
 
-#### Julia package
-
-[JSeqArray](https://github.com/CoreArray/JSeqArray.jl)
-
 
 
 ## SeqArray File Download
