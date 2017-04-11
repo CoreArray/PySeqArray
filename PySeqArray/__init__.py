@@ -191,7 +191,22 @@ class SeqArrayFile(pygds.gdsfile):
 		cc.flt_pop(self.fileid)
 
 	def GetData(self, name):
+		"""Get data
+
+		Get data from a SeqArray file with a given variable name and a sample/variant filter
+
+		Parameters
+		----------
+		name : str
+			the variable name
+
+		Returns
+		-------
+		a numpy array object
+
+		See Also
+		--------
+		FilterSet : set a filter
+		"""
 		return cc.get_data(self.fileid, name)
-
-
 
