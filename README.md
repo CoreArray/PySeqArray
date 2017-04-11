@@ -95,3 +95,8 @@ File: PySeqArray/data/1KG_phase1_release_v3_chr22.gds (1.1M)
    \--+ Half.Siblings   { Str8 1092 LZMA_ra(11.0%), 122B }
 ```
 
+
+### More examples
+
+[docs/demo/tutorial.ipynb](docs/demo/tutorial.ipynb)
+
