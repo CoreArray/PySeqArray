@@ -85,14 +85,7 @@ File: PySeqArray/data/1KG_phase1_release_v3_chr22.gds (1.1M)
 \--+ sample.annotation   [  ]
    |--+ Family.ID   { Str8 1092 LZMA_ra(15.3%), 1.1K }
    |--+ Population   { Str8 1092 LZMA_ra(5.08%), 222B }
-   |--+ Population.Description   { Str8 1092 LZMA_ra(1.74%), 566B }
-   |--+ Gender   { Str8 1092 LZMA_ra(5.85%), 386B }
-   |--+ Relationship   { Str8 1092 LZMA_ra(6.80%), 342B }
-   |--+ Non.Paternity   { Str8 1092 LZMA_ra(11.9%), 134B }
-   |--+ Siblings   { Str8 1092 LZMA_ra(19.1%), 266B }
-   |--+ Grandparents   { Str8 1092 LZMA_ra(10.5%), 118B }
-   |--+ Avuncular   { Str8 1092 LZMA_ra(17.3%), 250B }
-   \--+ Half.Siblings   { Str8 1092 LZMA_ra(11.0%), 122B }
+   \--+ Gender   { Str8 1092 LZMA_ra(5.85%), 386B }
 ```
 
 
