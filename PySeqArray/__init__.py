@@ -122,10 +122,12 @@ class SeqArrayFile(pygds.gdsfile):
 		--------
 		FilterReset : reset the filter
 		"""
-		if sample_id!=None or variant_id!=None:
-			if sample_id!=None:
+		s = not sample_id is None
+		v = not variant_id is None
+		if s or v:
+			if s:
 				cc.set_sample(self.fileid, sample_id, intersect, verbose)
-			if variant_id!=None:
+			if v:
 				cc.set_variant(self.fileid, variant_id, intersect, verbose)
 
 	def FilterReset(self, sample=True, variant=True, verbose=True):

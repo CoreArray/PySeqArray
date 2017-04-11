@@ -204,7 +204,7 @@ PY_EXPORT PyObject* SEQ_SetSpaceSample(PyObject *self, PyObject *args)
 			printf("# of selected samples: %s\n", PrettyInt(n));
 		}
 
-	COREARRAY_CATCH_NONE;
+	COREARRAY_CATCH_NONE
 }
 
 /*
@@ -327,105 +327,97 @@ PY_EXPORT PyObject* SEQ_SetSpaceSample2(PyObject* gdsfile, PyObject* samp_sel,
 
 	COREARRAY_CATCH
 }
-
+*/
 
 /// set a working space with selected variant id
-PY_EXPORT PyObject* SEQ_SetSpaceVariant(PyObject* gdsfile, PyObject* var_id,
-	PyObject* intersect, PyObject* verbose)
+PY_EXPORT PyObject* SEQ_SetSpaceVariant(PyObject *self, PyObject *args)
 {
-	int intersect_flag = Rf_asLogical(intersect);
+	int file_id;
+	PyObject *variant_id;
+	int intersect, verbose;
+	if (!PyArg_ParseTuple(args, "iO" BSTR BSTR, &file_id, &variant_id, &intersect, &verbose))
+		return NULL;
 
 	COREARRAY_TRY
 
-		CFileInfo &File = GetFileInfo(gdsfile);
+		CFileInfo &File = GetFileInfo(file_id);
 		TSelection &Sel = File.Selection();
 		C_BOOL *pArray = Sel.pVariant();
 		int Count = File.VariantNum();
 		PdAbstractArray varVariant = File.GetObj("variant.id", TRUE);
 
-		if (Rf_isInteger(var_id))
-		{
-			// initialize
-			set<int> set_id;
-			set_id.insert(INTEGER(var_id), INTEGER(var_id) + XLENGTH(var_id));
-			// sample id
-			vector<int> var_id(Count);
-			C_Int32 _st=0, _cnt=Count;
-			GDS_Array_ReadData(varVariant, &_st, &_cnt, &var_id[0], svInt32);
-
-			// set selection
-			if (!intersect_flag)
-			{
-				for (int i=0; i < Count; i++)
-					*pArray++ = (set_id.find(var_id[i]) != set_id.end());
-			} else {
-				for (int i=0; i < Count; i++, pArray++)
-				{
-					if (*pArray)
-						*pArray = (set_id.find(var_id[i]) != set_id.end());
-				}
-			}
-		} else if (Rf_isReal(var_id))
-		{
-			// initialize
-			set<double> set_id;
-			set_id.insert(REAL(var_id), REAL(var_id) + XLENGTH(var_id));
-			// variant id
-			vector<double> var_id(Count);
-			C_Int32 _st=0, _cnt=Count;
-			GDS_Array_ReadData(varVariant, &_st, &_cnt, &var_id[0], svFloat64);
-
-			// set selection
-			if (!intersect_flag)
-			{
-				for (int i=0; i < Count; i++)
-					*pArray++ = (set_id.find(var_id[i]) != set_id.end());
-			} else {
-				for (int i=0; i < Count; i++, pArray++)
-				{
-					if (*pArray)
-						*pArray = (set_id.find(var_id[i]) != set_id.end());
-				}
-			}
-		} else if (Rf_isString(var_id))
-		{
-			// initialize
-			set<string> set_id;
-			R_xlen_t m = XLENGTH(var_id);
-			for (R_xlen_t i=0; i < m; i++)
-				set_id.insert(string(CHAR(STRING_ELT(var_id, i))));
-			// sample id
-			vector<string> var_id(Count);
-			C_Int32 _st=0, _cnt=Count;
-			GDS_Array_ReadData(varVariant, &_st, &_cnt, &var_id[0], svStrUTF8);
-
-			// set selection
-			// set selection
-			if (!intersect_flag)
-			{
-				for (int i=0; i < Count; i++)
-					*pArray++ = (set_id.find(var_id[i]) != set_id.end());
-			} else {
-				for (int i=0; i < Count; i++, pArray++)
-				{
-					if (*pArray)
-						*pArray = (set_id.find(var_id[i]) != set_id.end());
-				}
-			}
-		} else if (Rf_isNull(var_id))
+		if (variant_id == Py_None)
 		{
 			memset(pArray, TRUE, Count);
+		} else if (numpy_is_array_or_list(variant_id))
+		{
+			if (numpy_is_array_int(variant_id))
+			{
+				// initialize
+				set<int> set_id;
+				{
+					vector<int> ary;
+					numpy_to_int32(variant_id, ary);
+					set_id.insert(ary.begin(), ary.end());
+				}
+
+				// variant id
+				vector<int> var_id(Count);
+				C_Int32 _st=0, _cnt=Count;
+				GDS_Array_ReadData(varVariant, &_st, &_cnt, &var_id[0], svInt32);
+
+				// set selection
+				if (!intersect)
+				{
+					for (int i=0; i < Count; i++)
+						*pArray++ = (set_id.find(var_id[i]) != set_id.end());
+				} else {
+					for (int i=0; i < Count; i++, pArray++)
+					{
+						if (*pArray)
+							*pArray = (set_id.find(var_id[i]) != set_id.end());
+					}
+				}
+			} else {
+				// initialize
+				set<string> set_id;
+				{
+					vector<string> ary;
+					numpy_to_string(variant_id, ary);
+					set_id.insert(ary.begin(), ary.end());
+				}
+
+				// variant id
+				vector<string> var_id(Count);
+				C_Int32 _st=0, _cnt=Count;
+				GDS_Array_ReadData(varVariant, &_st, &_cnt, &var_id[0], svStrUTF8);
+
+				// set selection
+				if (!intersect)
+				{
+					for (int i=0; i < Count; i++)
+						*pArray++ = (set_id.find(var_id[i]) != set_id.end());
+				} else {
+					for (int i=0; i < Count; i++, pArray++)
+					{
+						if (*pArray)
+							*pArray = (set_id.find(var_id[i]) != set_id.end());
+					}
+				}
+			}
 		} else
 			throw ErrSeqArray("Invalid type of 'variant.id'.");
 
-		int n = File.VariantSelNum();
-		if (Rf_asLogical(verbose) == TRUE)
-			Rprintf("# of selected variants: %s\n", PrettyInt(n));
+		if (verbose)
+		{
+			int n = File.VariantSelNum();
+			printf("# of selected variants: %s\n", PrettyInt(n));
+		}
 
-	COREARRAY_CATCH
+	COREARRAY_CATCH_NONE
 }
 
-
+/*
 /// set a working space with selected variant id (logical/raw vector, or index)
 PY_EXPORT PyObject* SEQ_SetSpaceVariant2(PyObject* gdsfile, PyObject* var_sel,
 	PyObject* intersect, PyObject* verbose)
@@ -1107,7 +1099,7 @@ static PyMethodDef module_methods[] = {
 	{ "flt_pop", (PyCFunction)SEQ_FilterPop, METH_VARARGS, NULL },
 
 	{ "set_sample", (PyCFunction)SEQ_SetSpaceSample, METH_VARARGS, NULL },
-	// { "set_variant", (PyCFunction)SEQ_SetSpaceVariant, METH_VARARGS, NULL },
+	{ "set_variant", (PyCFunction)SEQ_SetSpaceVariant, METH_VARARGS, NULL },
 
 
 	// get data
