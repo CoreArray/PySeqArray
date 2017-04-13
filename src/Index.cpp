@@ -1222,6 +1222,12 @@ COREARRAY_DLL_LOCAL PyObject* numpy_new_string(size_t n)
 }
 
 
+COREARRAY_DLL_LOCAL PyObject* numpy_new_list(size_t n)
+{
+	return new_array(n, NPY_OBJECT);
+}
+
+
 COREARRAY_DLL_LOCAL bool numpy_is_array(PyObject *obj)
 {
 	return PyArray_Check(obj) != 0;
@@ -1309,7 +1315,11 @@ COREARRAY_DLL_LOCAL void numpy_to_int32(PyObject *obj, vector<int> &out)
 
 COREARRAY_DLL_LOCAL void numpy_to_string(PyObject *obj, vector<string> &out)
 {
-	if (PyArray_Check(obj))
+	if (PYSTR_IS(obj))
+	{
+		out.resize(1);
+		out[0] = PYSTR_CHAR(obj);
+	} else if (PyArray_Check(obj))
 	{
 		PyObject **p = (PyObject**)PyArray_DATA(obj);
 		size_t n = PyArray_SIZE(obj);
@@ -1336,7 +1346,7 @@ COREARRAY_DLL_LOCAL void numpy_to_string(PyObject *obj, vector<string> &out)
 		#endif
 		}
 	} else
-		throw ErrSeqArray("Fails to convert a numpty object to a string vector.");
+		throw ErrSeqArray("Fails to convert a list or a numpty object to a string vector.");
 }
 
 }

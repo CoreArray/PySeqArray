@@ -402,4 +402,166 @@ COREARRAY_DLL_EXPORT PyObject* SEQ_GetData(PyObject *self, PyObject *args)
 	COREARRAY_CATCH_NONE
 }
 
+
+/// Apply functions over variants in block
+COREARRAY_DLL_EXPORT PyObject* SEQ_BApply_Variant(PyObject *self, PyObject *args)
+{
+	int file_id;
+	PyObject *name;
+	PyObject *func;
+	PyObject *obj;
+	const char *as_is;
+	int bsize;
+	int verbose;
+	if (!PyArg_ParseTuple(args, "iOOOsi" BSTR, &file_id, &name, &func,
+			&obj, &as_is, &bsize, &verbose))
+		return NULL;
+
+	if (!PyCallable_Check(func))
+	{
+		PyErr_SetString(PyExc_TypeError, "'fun' must be callable.");
+		return NULL;
+	}
+	if (bsize < 1)
+	{
+		PyErr_SetString(PyExc_ValueError, "'bsize' must be >= 1.");
+		return NULL;
+	}
+
+/*
+	int prog_flag = Rf_asLogical(RGetListElement(param, "progress"));
+	if (prog_flag == NA_LOGICAL)
+		error("'.progress' must be TRUE or FALSE.");
+*/
+
+	COREARRAY_TRY
+
+		vector<string> name_list;
+		numpy_to_string(name, name_list);
+		if (name_list.empty())
+			throw ErrSeqArray("'name' should be specified.");
+
+		PyObject *rv_ans = NULL;
+
+		// File information
+		CFileInfo &File = GetFileInfo(file_id);
+		// Selection
+		TSelection &Selection = File.Selection();
+
+		// the number of selected variants
+		int nVariant = File.VariantSelNum();
+		if (nVariant <= 0)
+			throw ErrSeqArray("There is no selected variant.");
+
+		// the number of data blocks
+		int NumBlock = nVariant / bsize;
+		if (nVariant % bsize) NumBlock ++;
+
+		// as_is
+		if (strcmp(as_is, "list")==0 || strcmp(as_is, "unlist")==0)
+		{
+			rv_ans = numpy_new_list(NumBlock);
+		}
+
+		// function arguments
+		int num_var = name_list.size();
+		int st_var = 0;
+		if (obj != Py_None) { num_var++; st_var = 1; }
+		PyObject *args = PyTuple_New(num_var);
+		if (obj != Py_None)
+			PyTuple_SetItem(args, 0, obj);
+
+		// local selection
+		File.SelList.push_back(TSelection());
+		TSelection &Sel = File.SelList.back();
+		Sel.Sample = Selection.Sample;
+		Sel.Variant.resize(File.VariantNum());
+
+		C_BOOL *pBase, *pSel, *pEnd;
+		pBase = pSel = Selection.pVariant();
+		pEnd = pBase + Selection.Variant.size();
+
+		// progress object
+		CProgressStdOut progress(NumBlock, verbose);
+
+		// for-loop
+		for (int idx=0; idx < NumBlock; idx++)
+		{
+			// assign sub-selection
+			{
+				C_BOOL *pNewSel = Sel.pVariant();
+				memset(pNewSel, 0, Sel.Variant.size());
+				// for-loop
+				for (int bs=bsize; bs > 0; bs--)
+				{
+					while ((pSel < pEnd) && (*pSel == FALSE))
+						pSel ++;
+					if (pSel < pEnd)
+					{
+						pNewSel[pSel - pBase] = TRUE;
+						pSel ++;
+					} else
+						break;
+				}
+			}
+
+			// load data
+			for (int i=st_var; i < num_var; i++)
+			{
+				PyObject *v = VarGetData(File, name_list[i-st_var].c_str());
+				PyTuple_SetItem(args, i, v);
+			}
+
+			// call Python function
+			PyObject *val = PyObject_CallObject(func, args);
+
+/*			// store data
+			switch (DatType)
+			{
+			case 1:  // list
+				if (dup_flag) call_val = duplicate(call_val);
+				SET_ELEMENT(rv_ans, idx, call_val);
+				break;
+			case 2:  // connection
+				if (OutputConn->text)
+				{
+					if (Rf_isList(call_val))
+					{
+						throw ErrSeqArray("the user-defined function should return a character vector.");
+					} else if (!Rf_isString(call_val))
+					{
+						call_val = AS_CHARACTER(call_val);
+					}
+					size_t n = XLENGTH(call_val);
+					for (size_t i=0; i < n; i++)
+					{
+						ConnPutText(OutputConn, "%s\n", CHAR(STRING_ELT(call_val, i)));
+					}
+				} else {
+					if (TYPEOF(call_val) != RAWSXP)
+						throw ErrSeqArray("the user-defined function should return a RAW vector.");
+					size_t n = XLENGTH(call_val);
+					size_t m = R_WriteConnection(OutputConn, RAW(call_val), n);
+					if (n != m)
+						throw ErrSeqArray("error in writing to a connection.");
+				}
+				break;
+			case 3:  // gdsn.class
+				RAppendGDS(OutputGDS, call_val);
+				break;
+			}
+*/
+
+			progress.Forward();
+		}
+
+		File.SelList.pop_back();
+		Py_DECREF(args);
+
+		// finally
+		if (rv_ans) return rv_ans;
+
+	COREARRAY_CATCH_NONE
+}
+
 } // extern "C"

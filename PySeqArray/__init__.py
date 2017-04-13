@@ -212,3 +212,5 @@ class SeqArrayFile(pygds.gdsfile):
 		"""
 		return cc.get_data(self.fileid, name)
 
+	def Apply(self, name, fun, object=None, as_is='none', bsize=1024, verbose=False):
+		return cc.apply(self.fileid, name, fun, object, as_is, bsize, verbose)

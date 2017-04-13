@@ -1088,6 +1088,7 @@ PY_EXPORT PyObject* SEQ_System()
 // Register routines
 
 extern PyObject* SEQ_GetData(PyObject *self, PyObject *args);
+COREARRAY_DLL_EXPORT PyObject* SEQ_BApply_Variant(PyObject *self, PyObject *args);
 
 
 static PyMethodDef module_methods[] = {
@@ -1101,9 +1102,9 @@ static PyMethodDef module_methods[] = {
 	{ "set_sample", (PyCFunction)SEQ_SetSpaceSample, METH_VARARGS, NULL },
 	{ "set_variant", (PyCFunction)SEQ_SetSpaceVariant, METH_VARARGS, NULL },
 
-
 	// get data
     { "get_data", (PyCFunction)SEQ_GetData, METH_VARARGS, NULL },
+    { "apply", (PyCFunction)SEQ_BApply_Variant, METH_VARARGS, NULL },
 
 	// end
 	{ NULL, NULL, 0, NULL }

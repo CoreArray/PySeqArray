@@ -564,6 +564,8 @@ COREARRAY_DLL_LOCAL PyObject* numpy_new_int32_dim3(size_t n1, size_t n2, size_t 
 
 COREARRAY_DLL_LOCAL PyObject* numpy_new_string(size_t n);
 
+COREARRAY_DLL_LOCAL PyObject* numpy_new_list(size_t n);
+
 COREARRAY_DLL_LOCAL bool numpy_is_array(PyObject *obj);
 COREARRAY_DLL_LOCAL bool numpy_is_array_or_list(PyObject *obj);
 COREARRAY_DLL_LOCAL bool numpy_is_array_int(PyObject *obj);
