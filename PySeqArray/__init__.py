@@ -212,5 +212,36 @@ class SeqArrayFile(pygds.gdsfile):
 		"""
 		return cc.get_data(self.fileid, name)
 
-	def Apply(self, name, fun, object=None, as_is='none', bsize=1024, verbose=False):
-		return cc.apply(self.fileid, name, fun, object, as_is, bsize, verbose)
+	def Apply(self, name, fun, obj=None, as_is='none', bsize=1024, verbose=False):
+		"""Apply function over array margins
+
+		Apply a user-defined function to margins of genotypes and annotations via blocking
+
+		Parameters
+		----------
+		name : str, list
+			the variable name, or a list of variable names
+		fun : function
+			the user-defined function
+		obj: object
+			the object passed to the user-defined function if it is not None
+		as_is: str
+			'none', no return; 'list', a list of the returned values from the user-defined function;
+			'unlist', flatten the returned values from the user-defined function
+		bsize: int
+			block size
+		verbose: bool
+			show information if True
+
+		Returns
+		-------
+		None, a list or a numpy array object
+
+		See Also
+		--------
+		FilterSet : set a filter
+		"""
+		v = cc.apply(self.fileid, name, fun, obj, as_is, bsize, verbose)
+		if as_is == 'unlist':
+			v = np.hstack(v)
+		return(v)

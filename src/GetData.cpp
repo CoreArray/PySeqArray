@@ -460,7 +460,10 @@ COREARRAY_DLL_EXPORT PyObject* SEQ_BApply_Variant(PyObject *self, PyObject *args
 		// as_is
 		if (strcmp(as_is, "list")==0 || strcmp(as_is, "unlist")==0)
 		{
-			rv_ans = numpy_new_list(NumBlock);
+			rv_ans = PyList_New(NumBlock);
+		} else if (strcmp(as_is, "none") != 0)
+		{
+			throw ErrSeqArray("'as_is' should be 'none', 'list' or 'unlist'.");
 		}
 
 		// function arguments
@@ -515,42 +518,9 @@ COREARRAY_DLL_EXPORT PyObject* SEQ_BApply_Variant(PyObject *self, PyObject *args
 			// call Python function
 			PyObject *val = PyObject_CallObject(func, args);
 
-/*			// store data
-			switch (DatType)
-			{
-			case 1:  // list
-				if (dup_flag) call_val = duplicate(call_val);
-				SET_ELEMENT(rv_ans, idx, call_val);
-				break;
-			case 2:  // connection
-				if (OutputConn->text)
-				{
-					if (Rf_isList(call_val))
-					{
-						throw ErrSeqArray("the user-defined function should return a character vector.");
-					} else if (!Rf_isString(call_val))
-					{
-						call_val = AS_CHARACTER(call_val);
-					}
-					size_t n = XLENGTH(call_val);
-					for (size_t i=0; i < n; i++)
-					{
-						ConnPutText(OutputConn, "%s\n", CHAR(STRING_ELT(call_val, i)));
-					}
-				} else {
-					if (TYPEOF(call_val) != RAWSXP)
-						throw ErrSeqArray("the user-defined function should return a RAW vector.");
-					size_t n = XLENGTH(call_val);
-					size_t m = R_WriteConnection(OutputConn, RAW(call_val), n);
-					if (n != m)
-						throw ErrSeqArray("error in writing to a connection.");
-				}
-				break;
-			case 3:  // gdsn.class
-				RAppendGDS(OutputGDS, call_val);
-				break;
-			}
-*/
+			// store data
+			if (rv_ans)
+				PyList_SetItem(rv_ans, idx, val);
 
 			progress.Forward();
 		}
