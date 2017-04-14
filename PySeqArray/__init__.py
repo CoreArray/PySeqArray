@@ -231,7 +231,7 @@ class SeqArrayFile(pygds.gdsfile):
 		bsize: int
 			block size
 		verbose: bool
-			show information if True
+			show progress information if True
 
 		Returns
 		-------

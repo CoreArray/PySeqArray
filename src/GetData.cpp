@@ -472,7 +472,10 @@ COREARRAY_DLL_EXPORT PyObject* SEQ_BApply_Variant(PyObject *self, PyObject *args
 		if (obj != Py_None) { num_var++; st_var = 1; }
 		PyObject *args = PyTuple_New(num_var);
 		if (obj != Py_None)
+		{
+			Py_INCREF(obj);
 			PyTuple_SetItem(args, 0, obj);
+		}
 
 		// local selection
 		File.SelList.push_back(TSelection());
@@ -517,6 +520,12 @@ COREARRAY_DLL_EXPORT PyObject* SEQ_BApply_Variant(PyObject *self, PyObject *args
 
 			// call Python function
 			PyObject *val = PyObject_CallObject(func, args);
+			if (val == NULL)
+			{
+				Py_DECREF(args);
+				if (rv_ans) Py_DECREF(rv_ans);
+				return NULL;
+			}
 
 			// store data
 			if (rv_ans)
