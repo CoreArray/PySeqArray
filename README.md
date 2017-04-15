@@ -85,7 +85,8 @@ File: PySeqArray/data/1KG_phase1_release_v3_chr22.gds (1.1M)
 \--+ sample.annotation   [  ]
    |--+ Family.ID   { Str8 1092 LZMA_ra(15.3%), 1.1K }
    |--+ Population   { Str8 1092 LZMA_ra(5.08%), 222B }
-   \--+ Gender   { Str8 1092 LZMA_ra(5.85%), 386B }
+   |--+ Gender   { Str8 1092 LZMA_ra(5.85%), 386B }
+   \--+ Continent   { Str8 1092 LZMA_ra(2.43%), 233B }
 ```
 
 
