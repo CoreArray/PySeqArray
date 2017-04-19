@@ -554,6 +554,8 @@ const C_UInt8 NA_UINT8   = 0xFF;
 
 COREARRAY_DLL_LOCAL bool numpy_init();
 
+COREARRAY_DLL_LOCAL PyObject* numpy_new_bool(size_t n);
+
 COREARRAY_DLL_LOCAL PyObject* numpy_new_uint8(size_t n);
 COREARRAY_DLL_LOCAL PyObject* numpy_new_uint8_mat(size_t n1, size_t n2);
 COREARRAY_DLL_LOCAL PyObject* numpy_new_uint8_dim3(size_t n1, size_t n2, size_t n3);

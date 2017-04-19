@@ -100,7 +100,7 @@ class SeqArrayFile(pygds.gdsfile):
 	def FilterSet(self, sample_id=None, variant_id=None, intersect=False, verbose=True):
 		"""Set a filter
 
-		Sets a filter to sample and/or variant.
+		Set a filter to sample and/or variant.
 
 		Parameters
 		----------
@@ -191,6 +191,26 @@ class SeqArrayFile(pygds.gdsfile):
 		FilterPush : push the current filter to the stack
 		"""
 		cc.flt_pop(self.fileid)
+
+	def FilterGet(self, sample=True):
+		"""Get a sample/variant filter
+
+		Get a sample or variant filter.
+
+		Parameters
+		----------
+		sample : bool
+			If True, return the sample filter; otherwise, return the variant filter
+
+		Returns
+		-------
+		A numpy object (a bool vector)
+
+		See Also
+		--------
+		FilterSet : set a filter
+		"""
+		return(cc.get_filter(self.fileid, sample))
 
 	def GetData(self, name):
 		"""Get data

@@ -3,6 +3,7 @@ PySeqArray: data manipulation of whole-genome sequencing variants with SeqArray 
 
 ![GPLv3](http://www.gnu.org/graphics/gplv3-88x31.png)
 [GNU General Public License, GPLv3](http://www.gnu.org/copyleft/gpl.html)
+
 [![Build Status](https://travis-ci.org/CoreArray/PySeqArray.png)](https://travis-ci.org/CoreArray/PySeqArray)
 
 pre-release version: v0.1

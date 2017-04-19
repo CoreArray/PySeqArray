@@ -711,65 +711,43 @@ PY_EXPORT PyObject* SEQ_SetChrom(PyObject* gdsfile, PyObject* include,
 
 	COREARRAY_CATCH
 }
+*/
 
 
 // ================================================================
 
 /// set a working space flag with selected variant id
-PY_EXPORT PyObject* SEQ_GetSpace(PyObject* gdsfile, PyObject* UseRaw)
+PY_EXPORT PyObject* SEQ_GetSpace(PyObject *self, PyObject *args)
 {
-	int use_raw_flag = Rf_asLogical(UseRaw);
-	if (use_raw_flag == NA_LOGICAL)
-		error("'.useraw' must be TRUE or FALSE.");
+	int file_id;
+	int sample;
+	if (!PyArg_ParseTuple(args, "i" BSTR, &file_id, &sample))
+		return NULL;
 
 	COREARRAY_TRY
 
-		CFileInfo &File = GetFileInfo(gdsfile);
+		CFileInfo &File = GetFileInfo(file_id);
 		TSelection &Sel = File.Selection();
 
 		// output
-		PROTECT(rv_ans = NEW_LIST(2));
-		PyObject* tmp;
-
-		// sample selection
-		size_t n = File.SampleNum();
-		if (use_raw_flag)
+		PyObject *rv_ans;
+		if (sample)
 		{
-			PROTECT(tmp = NEW_RAW(n));
-			memcpy(RAW(tmp), Sel.pSample(), n);
+			size_t n = File.SampleNum();
+			rv_ans = numpy_new_bool(n);
+			memcpy(numpy_getptr(rv_ans), Sel.pSample(), n);
 		} else {
-			PROTECT(tmp = NEW_LOGICAL(n));
-			int *p = LOGICAL(tmp);
-			C_BOOL *s = Sel.pSample();
-			for (; n > 0; n--) *p++ = *s++;
+			size_t n = File.VariantNum();
+			rv_ans = numpy_new_bool(n);
+			memcpy(numpy_getptr(rv_ans), Sel.pVariant(), n);
 		}
-		SET_ELEMENT(rv_ans, 0, tmp);
+		return rv_ans;
 
-		// variant selection
-		n = File.VariantNum();
-		if (use_raw_flag)
-		{
-			PROTECT(tmp = NEW_RAW(n));
-			memcpy(RAW(tmp), Sel.pVariant(), n);
-		} else {
-			PROTECT(tmp = NEW_LOGICAL(n));
-			int *p = LOGICAL(tmp);
-			C_BOOL *s = Sel.pVariant();
-			for (; n > 0; n--) *p++ = *s++;
-		}
-		SET_ELEMENT(rv_ans, 1, tmp);
-
-		PROTECT(tmp = NEW_CHARACTER(2));
-			SET_STRING_ELT(tmp, 0, mkChar("sample.sel"));
-			SET_STRING_ELT(tmp, 1, mkChar("variant.sel"));
-		SET_NAMES(rv_ans, tmp);
-
-		UNPROTECT(4);
-
-	COREARRAY_CATCH
+	COREARRAY_CATCH_NONE
 }
 
 
+/*
 // ===========================================================
 
 inline static C_BOOL *CLEAR_SELECTION(size_t num, C_BOOL *p)
@@ -1100,7 +1078,9 @@ static PyMethodDef module_methods[] = {
 	{ "flt_pop", (PyCFunction)SEQ_FilterPop, METH_VARARGS, NULL },
 
 	{ "set_sample", (PyCFunction)SEQ_SetSpaceSample, METH_VARARGS, NULL },
+
 	{ "set_variant", (PyCFunction)SEQ_SetSpaceVariant, METH_VARARGS, NULL },
+	{ "get_filter", (PyCFunction)SEQ_GetSpace, METH_VARARGS, NULL },
 
 	// get data
     { "get_data", (PyCFunction)SEQ_GetData, METH_VARARGS, NULL },

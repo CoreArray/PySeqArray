@@ -1172,6 +1172,11 @@ static PyObject* new_array(size_t n, NPY_TYPES type)
 }
 
 
+COREARRAY_DLL_LOCAL PyObject* numpy_new_bool(size_t n)
+{
+	return new_array(n, NPY_BOOL);
+}
+
 COREARRAY_DLL_LOCAL PyObject* numpy_new_uint8(size_t n)
 {
 	return new_array(n, NPY_UINT8);
