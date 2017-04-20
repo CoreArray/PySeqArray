@@ -1254,16 +1254,38 @@ COREARRAY_DLL_LOCAL bool numpy_is_array_int(PyObject *obj)
 		return false;
 }
 
+COREARRAY_DLL_LOCAL bool numpy_is_bool(PyObject *obj)
+{
+	return (PyArray_Check(obj) != 0) && (PyArray_TYPE(obj) == NPY_BOOL);
+}
+
 COREARRAY_DLL_LOCAL bool numpy_is_uint8(PyObject *obj)
 {
-	return PyArray_TYPE(obj) == NPY_UINT8;
+	return (PyArray_Check(obj) != 0) && (PyArray_TYPE(obj) == NPY_UINT8);
+}
+
+COREARRAY_DLL_LOCAL bool numpy_is_int(PyObject *obj)
+{
+	if (PyArray_Check(obj) != 0)
+	{
+		int np = PyArray_TYPE(obj);
+		return (np==NPY_INT8) || (np==NPY_UINT8) || (np==NPY_INT16) ||
+			(np==NPY_UINT16) || (np==NPY_INT32) || (np==NPY_UINT32) ||
+			(np==NPY_INT64) || (np==NPY_UINT64);
+	} else
+		return false;
 }
 
 COREARRAY_DLL_LOCAL bool numpy_is_string(PyObject *obj)
 {
-	return PyArray_TYPE(obj) == NPY_OBJECT;
+	return (PyArray_Check(obj) != 0) && (PyArray_TYPE(obj) == NPY_OBJECT);
 }
 
+
+COREARRAY_DLL_LOCAL size_t numpy_size(PyObject *obj)
+{
+	return PyArray_SIZE(obj);
+}
 
 COREARRAY_DLL_LOCAL void* numpy_getptr(PyObject *obj)
 {

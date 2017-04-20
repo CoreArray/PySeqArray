@@ -207,97 +207,75 @@ PY_EXPORT PyObject* SEQ_SetSpaceSample(PyObject *self, PyObject *args)
 	COREARRAY_CATCH_NONE
 }
 
-/*
-/// set a working space with selected sample id (logical/raw vector, or index)
-PY_EXPORT PyObject* SEQ_SetSpaceSample2(PyObject* gdsfile, PyObject* samp_sel,
-	PyObject* intersect, PyObject* verbose)
+
+/// set a working space with selected sample id (bool vector or index)
+PY_EXPORT PyObject* SEQ_SetSpaceSample2(PyObject *self, PyObject *args)
 {
-	int intersect_flag = Rf_asLogical(intersect);
+	int file_id;
+	PyObject *samp_sel;
+	int intersect, verbose;
+	if (!PyArg_ParseTuple(args, "iO" BSTR BSTR, &file_id, &samp_sel, &intersect, &verbose))
+		return NULL;
 
 	COREARRAY_TRY
 
-		CFileInfo &File = GetFileInfo(gdsfile);
+		CFileInfo &File = GetFileInfo(file_id);
 		TSelection &Sel = File.Selection();
 		C_BOOL *pArray = Sel.pSample();
 		int Count = File.SampleNum();
 
-		if (Rf_isLogical(samp_sel) || IS_RAW(samp_sel))
+		if (numpy_is_bool(samp_sel))
 		{
 			// a logical vector for selected samples
-			if (!intersect_flag)
+			if (!intersect)
 			{
-				if (XLENGTH(samp_sel) != Count)
-					throw ErrSeqArray("Invalid length of 'sample.sel'.");
-				// set selection
-				if (Rf_isLogical(samp_sel))
-				{
-					int *base = LOGICAL(samp_sel);
-					for (int i=0; i < Count; i++)
-						*pArray++ = ((*base++) == TRUE);
-				} else {
-					Rbyte *base = RAW(samp_sel);
-					for (int i=0; i < Count; i++)
-						*pArray++ = ((*base++) != 0);
-				}
+				if (numpy_size(samp_sel) != (size_t)Count)
+					throw ErrSeqArray("Invalid length of 'sample'.");
+				memcpy(pArray, numpy_getptr(samp_sel), Count);
 			} else {
-				if (XLENGTH(samp_sel) != File.SampleSelNum())
+				if (numpy_size(samp_sel) != (size_t)File.SampleSelNum())
 				{
 					throw ErrSeqArray(
-						"Invalid length of 'sample.sel' "
-						"(should be equal to the number of selected samples).");
+						"Invalid length of 'sample' (should be equal to the number of selected samples).");
 				}
-				// set selection
-				if (Rf_isLogical(samp_sel))
+				C_BOOL *base = (C_BOOL*)numpy_getptr(samp_sel);
+				for (int i=0; i < Count; i++)
 				{
-					int *base = LOGICAL(samp_sel);
-					for (int i=0; i < Count; i++, pArray++)
-					{
-						if (*pArray)
-							*pArray = ((*base++) == TRUE);
-					}
-				} else {
-					Rbyte *base = RAW(samp_sel);
-					for (int i=0; i < Count; i++)
-					{
-						if (*pArray)
-							*pArray = ((*base++) != 0);
-					}
+					if (*pArray)
+						*pArray = ((*base++) != 0);
 				}
 			}
-		} else if (Rf_isInteger(samp_sel) || Rf_isReal(samp_sel))
+		} else if (numpy_is_int(samp_sel))
 		{
-			if (Rf_isReal(samp_sel))
-				samp_sel = AS_INTEGER(samp_sel);
+			vector<int> idx;
+			numpy_to_int32(samp_sel, idx);
 
-			if (!intersect_flag)
+			if (!intersect)
 			{
-				int *pI = INTEGER(samp_sel);
-				R_xlen_t N = XLENGTH(samp_sel);
+				int *pI = &idx[0];
+				size_t N = idx.size();
 				// check
-				for (R_xlen_t i=0; i < N; i++)
+				for (size_t i=0; i < N; i++)
 				{
 					int I = *pI ++;
-					if ((I != NA_INTEGER) && ((I < 1) || (I > Count)))
-						throw ErrSeqArray("Out of range 'sample.sel'.");
+					if ((I < 0) || (I >= Count))
+						throw ErrSeqArray("Out of range 'sample'.");
 				}
 				// set values
 				memset((void*)pArray, 0, Count);
-				pI = INTEGER(samp_sel);
-				for (R_xlen_t i=0; i < N; i++)
-				{
-					int I = *pI ++;
-					if (I != NA_INTEGER) pArray[I-1] = TRUE;
-				}
+				pI = &idx[0];
+				for (size_t i=0; i < N; i++)
+					pArray[*pI++] = TRUE;
 			} else {
 				int Cnt = File.SampleSelNum();
-				int *pI = INTEGER(samp_sel);
-				R_xlen_t N = XLENGTH(samp_sel);
+				int *pI = &idx[0];
+				size_t N = idx.size();
 				// check
-				for (R_xlen_t i=0; i < N; i++)
+				for (size_t i=0; i < N; i++)
 				{
 					int I = *pI ++;
-					if ((I != NA_INTEGER) && ((I < 1) || (I > Cnt)))
-						throw ErrSeqArray("Out of range 'sample.sel'.");
+					if ((I < 0) || (I >= Cnt))
+						throw ErrSeqArray("Out of range 'sample'.");
 				}
 				// get the current index
 				vector<int> Idx;
@@ -308,26 +286,25 @@ PY_EXPORT PyObject* SEQ_SetSpaceSample2(PyObject* gdsfile, PyObject* samp_sel,
 				}
 				// set values
 				memset((void*)pArray, 0, Count);
-				pI = INTEGER(samp_sel);
-				for (R_xlen_t i=0; i < N; i++)
-				{
-					int I = *pI ++;
-					if (I != NA_INTEGER) pArray[Idx[I-1]] = TRUE;
-				}
+				pI = &idx[0];
+				for (size_t i=0; i < N; i++)
+					pArray[Idx[*pI++]] = TRUE;
 			}
-		} else if (Rf_isNull(samp_sel))
+		} else if (samp_sel == Py_None)
 		{
 			memset(pArray, TRUE, Count);
 		} else
-			throw ErrSeqArray("Invalid type of 'sample.sel'.");
+			throw ErrSeqArray("Invalid type of 'sample'.");
 
-		int n = File.SampleSelNum();
-		if (Rf_asLogical(verbose) == TRUE)
-			Rprintf("# of selected samples: %s\n", PrettyInt(n));
+		if (verbose)
+		{
+			int n = File.SampleSelNum();
+			printf("# of selected samples: %s\n", PrettyInt(n));
+		}
 
-	COREARRAY_CATCH
+	COREARRAY_CATCH_NONE
 }
-*/
+
 
 /// set a working space with selected variant id
 PY_EXPORT PyObject* SEQ_SetSpaceVariant(PyObject *self, PyObject *args)
@@ -417,97 +394,76 @@ PY_EXPORT PyObject* SEQ_SetSpaceVariant(PyObject *self, PyObject *args)
 	COREARRAY_CATCH_NONE
 }
 
-/*
-/// set a working space with selected variant id (logical/raw vector, or index)
-PY_EXPORT PyObject* SEQ_SetSpaceVariant2(PyObject* gdsfile, PyObject* var_sel,
-	PyObject* intersect, PyObject* verbose)
+
+/// set a working space with selected variant (bool vector or index)
+PY_EXPORT PyObject* SEQ_SetSpaceVariant2(PyObject *self, PyObject *args)
 {
-	int intersect_flag = Rf_asLogical(intersect);
+	int file_id;
+	PyObject *var_sel;
+	int intersect, verbose;
+	if (!PyArg_ParseTuple(args, "iO" BSTR BSTR, &file_id, &var_sel, &intersect, &verbose))
+		return NULL;
 
 	COREARRAY_TRY
 
-		CFileInfo &File = GetFileInfo(gdsfile);
+		CFileInfo &File = GetFileInfo(file_id);
 		TSelection &Sel = File.Selection();
 		C_BOOL *pArray = Sel.pVariant();
 		int Count = File.VariantNum();
 
-		if (Rf_isLogical(var_sel) || IS_RAW(var_sel))
+		if (numpy_is_bool(var_sel))
 		{
 			// a logical vector for selected samples
-			if (!intersect_flag)
+			if (!intersect)
 			{
-				if (XLENGTH(var_sel) != Count)
+				if (numpy_size(var_sel) != (size_t)Count)
 					throw ErrSeqArray("Invalid length of 'variant.sel'.");
-				// set selection
-				if (Rf_isLogical(var_sel))
-				{
-					int *base = LOGICAL(var_sel);
-					for (int i=0; i < Count; i++)
-						*pArray++ = ((*base++) == TRUE);
-				} else {
-					Rbyte *base = RAW(var_sel);
-					for (int i=0; i < Count; i++)
-						*pArray++ = ((*base++) != 0);
-				}
+				memcpy(pArray, numpy_getptr(var_sel), Count);
 			} else {
-				if (XLENGTH(var_sel) != File.VariantSelNum())
+				if (numpy_size(var_sel) != (size_t)File.VariantSelNum())
 				{
 					throw ErrSeqArray(
-						"Invalid length of 'variant.sel' "
-						"(should be equal to the number of selected variants).");
+						"Invalid length of 'variant' (should be equal to the number of selected variants).");
 				}
 				// set selection
-				if (Rf_isLogical(var_sel))
+				C_BOOL *base = (C_BOOL*)numpy_getptr(var_sel);
+				for (int i=0; i < Count; i++)
 				{
-					int *base = LOGICAL(var_sel);
-					for (int i=0; i < Count; i++, pArray++)
-					{
-						if (*pArray)
-							*pArray = ((*base++) == TRUE);
-					}
-				} else {
-					Rbyte *base = RAW(var_sel);
-					for (int i=0; i < Count; i++)
-					{
-						if (*pArray)
-							*pArray = ((*base++) != 0);
-					}
+					if (*pArray)
+						*pArray = ((*base++) != 0);
 				}
 			}
-		} else if (Rf_isInteger(var_sel) || Rf_isReal(var_sel))
+		} else if (numpy_is_int(var_sel))
 		{
-			if (Rf_isReal(var_sel))
-				var_sel = AS_INTEGER(var_sel);
+			vector<int> idx;
+			numpy_to_int32(var_sel, idx);
 
-			if (!intersect_flag)
+			if (!intersect)
 			{
-				int *pI = INTEGER(var_sel);
-				R_xlen_t N = XLENGTH(var_sel);
+				int *pI = &idx[0];
+				size_t N = idx.size();
 				// check
-				for (R_xlen_t i=0; i < N; i++)
+				for (size_t i=0; i < N; i++)
 				{
 					int I = *pI ++;
-					if ((I != NA_INTEGER) && ((I < 1) || (I > Count)))
-						throw ErrSeqArray("Out of range 'variant.sel'.");
+					if ((I < 0) || (I >= Count))
+						throw ErrSeqArray("Out of range 'variant'.");
 				}
 				// set values
 				memset((void*)pArray, 0, Count);
-				pI = INTEGER(var_sel);
-				for (R_xlen_t i=0; i < N; i++)
-				{
-					int I = *pI ++;
-					if (I != NA_INTEGER) pArray[I-1] = TRUE;
-				}
+				pI = &idx[0];
+				for (size_t i=0; i < N; i++)
+					pArray[*pI++] = TRUE;
 			} else {
 				int Cnt = File.VariantSelNum();
-				int *pI = INTEGER(var_sel);
-				R_xlen_t N = XLENGTH(var_sel);
+				int *pI = &idx[0];
+				size_t N = idx.size();
 				// check
-				for (R_xlen_t i=0; i < N; i++)
+				for (size_t i=0; i < N; i++)
 				{
 					int I = *pI ++;
-					if ((I != NA_INTEGER) && ((I < 1) || (I > Cnt)))
-						throw ErrSeqArray("Out of range 'variant.sel'.");
+					if ((I < 0) || (I >= Cnt))
+						throw ErrSeqArray("Out of range 'variant'.");
 				}
 				// get the current index
 				vector<int> Idx;
@@ -518,27 +474,26 @@ PY_EXPORT PyObject* SEQ_SetSpaceVariant2(PyObject* gdsfile, PyObject* var_sel,
 				}
 				// set values
 				memset((void*)pArray, 0, Count);
-				pI = INTEGER(var_sel);
-				for (R_xlen_t i=0; i < N; i++)
-				{
-					int I = *pI ++;
-					if (I != NA_INTEGER) pArray[Idx[I-1]] = TRUE;
-				}
+				pI = &idx[0];
+				for (size_t i=0; i < N; i++)
+					pArray[Idx[*pI++]] = TRUE;
 			}
-		} else if (Rf_isNull(var_sel))
+		} else if (var_sel == Py_None)
 		{
 			memset(pArray, TRUE, Count);
 		} else
-			throw ErrSeqArray("Invalid type of 'variant.sel'.");
+			throw ErrSeqArray("Invalid type of 'variant'.");
 
-		int n = File.VariantSelNum();
-		if (Rf_asLogical(verbose) == TRUE)
-			Rprintf("# of selected variants: %s\n", PrettyInt(n));
+		if (verbose)
+		{
+			int n = File.VariantSelNum();
+			printf("# of selected variants: %s\n", PrettyInt(n));
+		}
 
-	COREARRAY_CATCH
+	COREARRAY_CATCH_NONE
 }
 
-
+/*
 // ================================================================
 
 static bool is_numeric(const string &txt)
@@ -627,8 +582,8 @@ PY_EXPORT PyObject* SEQ_SetChrom(PyObject* gdsfile, PyObject* include,
 			CChromIndex &Chrom = File.Chromosome();
 			map<string, CRangeSet> RngSets;
 
-			R_xlen_t n = XLENGTH(include);
-			for (R_xlen_t idx=0; idx < n; idx++)
+			size_t n = XLENGTH(include);
+			for (size_t idx=0; idx < n; idx++)
 			{
 				string s = CHAR(STRING_ELT(include, idx));
 
@@ -1078,8 +1033,10 @@ static PyMethodDef module_methods[] = {
 	{ "flt_pop", (PyCFunction)SEQ_FilterPop, METH_VARARGS, NULL },
 
 	{ "set_sample", (PyCFunction)SEQ_SetSpaceSample, METH_VARARGS, NULL },
-
+	{ "set_sample2", (PyCFunction)SEQ_SetSpaceSample2, METH_VARARGS, NULL },
 	{ "set_variant", (PyCFunction)SEQ_SetSpaceVariant, METH_VARARGS, NULL },
+	{ "set_variant2", (PyCFunction)SEQ_SetSpaceVariant2, METH_VARARGS, NULL },
+
 	{ "get_filter", (PyCFunction)SEQ_GetSpace, METH_VARARGS, NULL },
 
 	// get data
