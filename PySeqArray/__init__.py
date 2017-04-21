@@ -2,6 +2,8 @@
 import numpy as np
 # import os
 import os
+# import multiprocessing
+import multiprocessing.pool as pl
 # import pygds
 import pygds
 # import c library
@@ -12,7 +14,7 @@ import PySeqArray.ccall as cc
 
 # ===========================================================================
 
-def get_example_path(filename=None):
+def seqExample(filename=None):
 	"""Example files
 
 	Return a file name in the folder of example data.
@@ -28,7 +30,7 @@ def get_example_path(filename=None):
 
 	Examples
 	--------
-	>>> get_example_path('1KG_phase1_release_v3_chr22.gds')
+	>>> seqExample('1KG_phase1_release_v3_chr22.gds')
 	"""
 	import PySeqArray
 	s = os.path.dirname(PySeqArray.__file__)
@@ -36,6 +38,18 @@ def get_example_path(filename=None):
 		return os.path.join(s, 'data')
 	else:
 		return os.path.join(s, 'data', filename)
+
+
+
+def seqParallel(ncpu, file, fun, obj=None):
+	"""
+	"""
+	# check
+	if isinstance(ncpu, (int, float, pl.Pool)):
+		print(ncpu)
+	else:
+		raise ValueError('ncpu should be a numeric value or multiprocessing.pool.Pool.')
+
 
 
 # ===========================================================================
