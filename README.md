@@ -53,7 +53,7 @@ Zheng X, Gogarten S, Lawrence M, Stilp A, Conomos M, Weir BS, Laurie C, Levine D
 ```python
 import PySeqArray as ps
 
-fn = ps.get_example_path('1KG_phase1_release_v3_chr22.gds')
+fn = ps.seqExample('1KG_phase1_release_v3_chr22.gds')
 f = ps.SeqArrayFile()
 f.open(fn)
 f.show()

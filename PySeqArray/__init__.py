@@ -48,7 +48,7 @@ def seqParallel(ncpu, file, fun, obj=None):
 	if isinstance(ncpu, (int, float, pl.Pool)):
 		print(ncpu)
 	else:
-		raise ValueError('ncpu should be a numeric value or multiprocessing.pool.Pool.')
+		raise ValueError('`ncpu` should be a numeric value or `multiprocessing.pool.Pool`.')
 
 
 
