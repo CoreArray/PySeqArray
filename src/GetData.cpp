@@ -33,6 +33,7 @@ extern "C"
 // Get data from a working space
 // ===========================================================
 
+/*
 static bool is_logical(PdGDSObj Node)
 {
 	char classname[32];
@@ -40,6 +41,7 @@ static bool is_logical(PdGDSObj Node)
 	GDS_Node_GetClassName(Node, classname, sizeof(classname));
 	return (strcmp(classname, "dBit1") == 0);
 }
+*/
 
 
 // get data

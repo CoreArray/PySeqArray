@@ -53,7 +53,7 @@ public:
 	/// constructor
 	CApply_Variant_Pos(CFileInfo &File);
 	virtual void ReadData(PyObject *val);
-	virtual PyObject *NeedArray(int &nProtected);
+	virtual PyObject *NeedArray();
 };
 
 
@@ -67,7 +67,7 @@ public:
 	/// constructor
 	CApply_Variant_Chrom(CFileInfo &File);
 	virtual void ReadData(PyObject *val);
-	virtual PyObject *NeedArray(int &nProtected);
+	virtual PyObject *NeedArray();
 };
 
 
@@ -150,7 +150,7 @@ public:
 	void Init(CFileInfo &File, bool use_raw);
 
 	virtual void ReadData(PyObject *val);
-	virtual PyObject *NeedArray(int &nProtected);
+	virtual PyObject *NeedArray();
 };
 
 
@@ -170,7 +170,7 @@ public:
 	CApply_Variant_Info(CFileInfo &File, const char *var_name);
 
 	virtual void ReadData(PyObject *val);
-	virtual PyObject *NeedArray(int &nProtected);
+	virtual PyObject *NeedArray();
 };
 
 
@@ -197,7 +197,7 @@ public:
 	void Init(CFileInfo &File, const char *var_name);
 
 	virtual void ReadData(PyObject *val);
-	virtual PyObject *NeedArray(int &nProtected);
+	virtual PyObject *NeedArray();
 };
 
 

@@ -28,7 +28,7 @@ namespace PySeqArray
 using namespace Vectorization;
 
 static const char *ERR_DIM = "Invalid dimension of '%s'.";
-static const char *ERR_DIM_EX = "Invalid dimension of '%s': %s.";
+// static const char *ERR_DIM_EX = "Invalid dimension of '%s': %s.";
 
 
 // =====================================================================
@@ -67,6 +67,7 @@ PyObject* CApply_Variant_Basic::NeedArray(int &nProtected)
 		VarNode = RObject_GDS(Node, 1, nProtected, false);
 	return VarNode;
 }
+*/
 
 /*
 // ====
