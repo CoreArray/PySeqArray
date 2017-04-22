@@ -1146,7 +1146,7 @@ COREARRAY_DLL_LOCAL string GDS_PATH_PREFIX(const string &path, char prefix)
 #if (PY_MAJOR_VERSION >= 3)
 static PyObject* _init_() { import_array(); return Py_None; }
 #else
-static void _init_() { import_array(); return NULL; }
+static void _init_() { import_array(); }
 #endif
 
 COREARRAY_DLL_LOCAL bool numpy_init()

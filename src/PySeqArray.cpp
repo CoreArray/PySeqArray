@@ -1073,11 +1073,10 @@ PyMODINIT_FUNC initccall()
 	PyObject *mod;
 #if PY_MAJOR_VERSION >= 3
 	mod = PyModule_Create(&ModStruct);
+	return mod;
 #else
 	mod = Py_InitModule("PySeqArray.ccall", module_methods);
 #endif
-
-	return mod;
 }
 
 } // extern "C"
