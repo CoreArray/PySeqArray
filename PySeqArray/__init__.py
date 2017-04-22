@@ -34,7 +34,7 @@ def seqExample(filename=None):
 	"""
 	import PySeqArray
 	s = os.path.dirname(PySeqArray.__file__)
-	if filename == None:
+	if filename is None:
 		return os.path.join(s, 'data')
 	else:
 		return os.path.join(s, 'data', filename)
