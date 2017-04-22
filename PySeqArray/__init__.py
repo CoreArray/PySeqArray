@@ -151,10 +151,10 @@ class SeqArrayFile(pygds.gdsfile):
 
 		Parameters
 		----------
-		sample : str
-			a bool vector or an indexing vecot for selecting samples
-		variant : bool
-			a bool vector or an indexing vecot for selecting variants
+		sample : vector, range
+			a bool vector, an indexing vecot for selecting samples or a range object
+		variant : vector, range
+			a bool vector, an indexing vecot for selecting variants or a range object
 		intersect : bool
 			if False, the candidate variants for selection are all possible variants (by default);
 			if True, the candidate variants are from the selected variants defined via the previous call

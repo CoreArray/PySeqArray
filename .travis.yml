@@ -1,7 +1,9 @@
 language: python
 python:
+  - "3.3"
+  - "3.4"
+  - "3.5"
   - "3.6"
-  - "nightly" # currently points to 3.7-dev
 # command to install dependencies
 install: "pip install git+git://github.com/CoreArray/pygds.git"
 # command to run tests
