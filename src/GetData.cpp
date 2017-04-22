@@ -428,12 +428,6 @@ COREARRAY_DLL_EXPORT PyObject* SEQ_BApply_Variant(PyObject *self, PyObject *args
 		return NULL;
 	}
 
-/*
-	int prog_flag = Rf_asLogical(RGetListElement(param, "progress"));
-	if (prog_flag == NA_LOGICAL)
-		error("'.progress' must be TRUE or FALSE.");
-*/
-
 	COREARRAY_TRY
 
 		vector<string> name_list;
@@ -488,7 +482,7 @@ COREARRAY_DLL_EXPORT PyObject* SEQ_BApply_Variant(PyObject *self, PyObject *args
 		pEnd = pBase + Selection.Variant.size();
 
 		// progress object
-		CProgressStdOut progress(NumBlock, verbose);
+		CProgressStdOut progress(NumBlock, verbose!=0);
 
 		// for-loop
 		for (int idx=0; idx < NumBlock; idx++)

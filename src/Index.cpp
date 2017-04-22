@@ -760,7 +760,6 @@ CProgress::CProgress(C_Int64 start, C_Int64 count, FILE *conn, bool newline)
 	TotalCount = count;
 	Counter = (start >= 0) ? start : 0;
 	double percent;
-	if (!conn) conn = stdout;
 	File = conn;
 	NewLine = newline;
 

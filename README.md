@@ -18,9 +18,9 @@ The SeqArray format is built on top of Genomic Data Structure (GDS) data format,
 
 ## Prerequisites
 
-You need, at a minimum:
+Python 2 (2.6-2.7), and Python 3 (3.3-3.6)
 
-Python v3.0 or later, NumPy v1.6.0 or later
+NumPy 1.6.0 or later
 
 
 ## Installation
