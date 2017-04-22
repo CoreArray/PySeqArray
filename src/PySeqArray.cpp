@@ -1062,12 +1062,15 @@ static struct PyModuleDef ModStruct =
 };
 
 PyMODINIT_FUNC PyInit_ccall()
-#else
-PyMODINIT_FUNC initccall()
-#endif
 {
 	if (!numpy_init()) return NULL;
 	if (Init_GDS_Routines() < 0) return NULL;
+#else
+PyMODINIT_FUNC initccall()
+{
+	if (!numpy_init()) return;
+	if (Init_GDS_Routines() < 0) return;
+#endif
 
 	// create the module and add the functions
 	PyObject *mod;
