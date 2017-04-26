@@ -93,5 +93,8 @@ File: PySeqArray/data/1KG_phase1_release_v3_chr22.gds (1.1M)
 
 ### More examples
 
-[docs/demo/tutorial.ipynb](docs/demo/tutorial.ipynb)
+
+Python tutorial with SeqArray files: [docs/demo/tutorial.ipynb](docs/demo/tutorial.ipynb) 
+
+Python tutorial with multiprocessing: [docs/demo/tutorial_parallel.ipynb](docs/demo/tutorial_parallel.ipynb)
 
