@@ -9,6 +9,9 @@ import multiprocessing.pool as pl
 import pygds
 # import c library
 import PySeqArray.ccall as cc
+# other ...
+from sys import platform
+from functools import reduce
 
 
 
@@ -47,8 +50,19 @@ def seqExample(filename=None):
 # define internal function using forking
 def _proc_fork_func(x):
 	i = x[0]; ncpu = x[1]
-	file = x[2]; fun = x[3]; param = x[4]
-	cc.flt_split(file.fileid, i, ncpu, 'by.variant')
+	file = x[2]; fun = x[3]; param = x[4]; split = x[5]
+	cc.flt_split(file.fileid, i, ncpu, split)
+	return fun(file, param)
+
+# define a process function
+def _proc_func(x):
+	i = x[0]; ncpu = x[1]
+	fn = x[2]; fun = x[3]; param = x[4]; sel = x[5]; split = x[6]
+	import PySeqArray
+	file = PySeqArray.SeqArrayFile()
+	file.open(fn, allow_dup=True)
+	file.FilterSet2(sel[0], sel[1], verbose=False)
+	cc.flt_split(file.fileid, i, ncpu, split)
 	return fun(file, param)
 
 
@@ -302,12 +316,12 @@ class SeqArrayFile(pygds.gdsfile):
 			the user-defined function
 		param: object
 			the parameter passed to the user-defined function if it is not None
-		as_is: str
+		as_is : str
 			'none', no return; 'list', a list of the returned values from the user-defined function;
 			'unlist', flatten the returned values from the user-defined function
-		bsize: int
+		bsize : int
 			block size
-		verbose: bool
+		verbose : bool
 			show progress information if True
 
 		Returns
@@ -324,8 +338,29 @@ class SeqArrayFile(pygds.gdsfile):
 		return(v)
 
 
-	def RunParallel(self, ncpu, fun, param=None, combine='unlist'):
-		"""
+	def RunParallel(self, fun, param=None, ncpu=0, split='by.variant', combine='unlist'):
+		"""Apply Functions in Parallel
+
+		Apply a user-defined function in parallel over array margins
+
+		Parameters
+		----------
+		fun : function
+			the user-defined function
+		param : object
+			the parameter passed to the user-defined function if it is not None
+		ncpu : int
+			the number of cores or an instance of 'multiprocessing.pool.Pool';
+			0 to use the number of cores minus 1
+		split : str
+			'by.variant', 'by.sample', 'none': split the dataset by variant or sample according to multiple processes, or "none" for no split
+		combine : str, function
+			'none', no return; 'list', a list of the returned values from the user-defined function;
+			'unlist', flatten the returned values from the user-defined function
+
+		Returns
+		-------
+		None, a list or a numpy array object
 		"""
 		# check
 		if isinstance(ncpu, (int, float, pl.Pool)):
@@ -341,10 +376,27 @@ class SeqArrayFile(pygds.gdsfile):
 				ncpu = pa._processes
 			# run
 			if ncpu >= 2:
-				# if isinstance(ncpu, (int, float)):
-				sel = [ self.FilterGet(True), self.FilterGet(False) ]
-				pm = [ [ i,ncpu,self,fun,param ] for i in range(pa._processes) ]
-				v = pa.map(_proc_fork_func, pm)
+				# direct forking or not
+				is_fork = False
+				if isinstance(ncpu, (int, float)):
+					is_fork = (platform=="linux" or platform=="linux2" or
+						platform=="unix" or platform=="darwin")
+				if is_fork:
+					pm = [ [ i,ncpu,self,fun,param,split ] for i in range(ncpu) ]
+					v = pa.map(_proc_fork_func, pm)
+				else:
+					sel = [ self.FilterGet(True), self.FilterGet(False) ]
+					pm = [ [ i,ncpu,self.filename,fun,param,sel,split ] for i in range(ncpu) ]
+					v = pa.map(_proc_func, pm)
+				# output
+				if combine == 'none':
+					v = None
+				elif combine == 'unlist':
+					v = np.hstack(v)
+				elif callable(combine):
+					v = reduce(combine, v)
+				elif combine != 'list':
+					raise ValueError('`combine` is invalid.')
 				return v
 			else:
 				return fun(self, param)

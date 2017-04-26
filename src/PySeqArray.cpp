@@ -749,8 +749,11 @@ PY_EXPORT PyObject* SEQ_SplitSelection(PyObject *self, PyObject *args)
 		{
 			sel = &s.Sample[0];
 			SelectCount = GetNumOfTRUE(sel, s.Sample.size());
+		} else if (strcmp(split, "none") == 0)
+		{
+			Py_RETURN_NONE;
 		} else {
-			throw ErrSeqArray("Invalid 'split'.");
+			throw ErrSeqArray("'split' should be 'by.variant', 'by.sample' or 'none'.");
 		}
 
 		// split a list
