@@ -3,6 +3,7 @@ import numpy as np
 # import os
 import os
 # import multiprocessing
+import multiprocessing as mp
 import multiprocessing.pool as pl
 # import pygds
 import pygds
@@ -41,14 +42,14 @@ def seqExample(filename=None):
 
 
 
-def seqParallel(ncpu, file, fun, obj=None):
-	"""
-	"""
-	# check
-	if isinstance(ncpu, (int, float, pl.Pool)):
-		print(ncpu)
-	else:
-		raise ValueError('`ncpu` should be a numeric value or `multiprocessing.pool.Pool`.')
+# ===========================================================================
+
+# define internal function using forking
+def _proc_fork_func(x):
+	i = x[0]; ncpu = x[1]
+	file = x[2]; fun = x[3]; param = x[4]
+	cc.flt_split(file.fileid, i, ncpu, 'by.variant')
+	return fun(file, param)
 
 
 
@@ -66,8 +67,10 @@ class SeqArrayFile(pygds.gdsfile):
 		cc.file_done(self.fileid)
 		pygds.gdsfile.__del__(self)
 
+
 	def create(self, filename, allow_dup=False):
 		raise Exception('not supported!')
+
 
 	def open(self, filename, readonly=True, allow_dup=False):
 		"""Open an SeqArray file
@@ -95,6 +98,7 @@ class SeqArrayFile(pygds.gdsfile):
 		cc.file_init(self.fileid)
 		# TODO: file checking
 
+
 	def close(self):
 		"""Close a SeqArray file
 
@@ -110,6 +114,7 @@ class SeqArrayFile(pygds.gdsfile):
 		"""
 		cc.file_done(self.fileid)
 		pygds.gdsfile.close(self)
+
 
 	def FilterSet(self, sample_id=None, variant_id=None, intersect=False, verbose=True):
 		"""Set a filter
@@ -144,6 +149,7 @@ class SeqArrayFile(pygds.gdsfile):
 			if v:
 				cc.set_variant(self.fileid, variant_id, intersect, verbose)
 
+
 	def FilterSet2(self, sample=None, variant=None, intersect=False, verbose=True):
 		"""Set a filter
 
@@ -175,6 +181,7 @@ class SeqArrayFile(pygds.gdsfile):
 		if not variant is None:
 			cc.set_variant2(self.fileid, variant, intersect, verbose)
 
+
 	def FilterReset(self, sample=True, variant=True, verbose=True):
 		"""Reset the filter
 
@@ -202,6 +209,7 @@ class SeqArrayFile(pygds.gdsfile):
 		if variant:
 			cc.set_variant(self.fileid, None, False, verbose)
 
+
 	def FilterPush(reset=True):
 		"""Push a filter
 
@@ -222,6 +230,7 @@ class SeqArrayFile(pygds.gdsfile):
 		"""
 		cc.flt_push(self.fileid, reset)
 
+
 	def FilterPop():
 		"""Pop a filter
 
@@ -236,6 +245,7 @@ class SeqArrayFile(pygds.gdsfile):
 		FilterPush : push the current filter to the stack
 		"""
 		cc.flt_pop(self.fileid)
+
 
 	def FilterGet(self, sample=True):
 		"""Get a sample/variant filter
@@ -257,6 +267,7 @@ class SeqArrayFile(pygds.gdsfile):
 		"""
 		return(cc.get_filter(self.fileid, sample))
 
+
 	def GetData(self, name):
 		"""Get data
 
@@ -276,6 +287,7 @@ class SeqArrayFile(pygds.gdsfile):
 		FilterSet : set a filter
 		"""
 		return cc.get_data(self.fileid, name)
+
 
 	def Apply(self, name, fun, param=None, as_is='none', bsize=1024, verbose=False):
 		"""Apply function over array margins
@@ -310,3 +322,32 @@ class SeqArrayFile(pygds.gdsfile):
 		if as_is == 'unlist':
 			v = np.hstack(v)
 		return(v)
+
+
+	def RunParallel(self, ncpu, fun, param=None, combine='unlist'):
+		"""
+		"""
+		# check
+		if isinstance(ncpu, (int, float, pl.Pool)):
+			if isinstance(ncpu, (int, float)):
+				if ncpu <= 0:
+					ncpu = mp.cpu_count() - 1
+					if ncpu <= 0:
+						ncpu = 1
+				if ncpu >= 2:
+					pa = pl.Pool(processes=ncpu)
+			else:
+				pa = ncpu
+				ncpu = pa._processes
+			# run
+			if ncpu >= 2:
+				# if isinstance(ncpu, (int, float)):
+				sel = [ self.FilterGet(True), self.FilterGet(False) ]
+				pm = [ [ i,ncpu,self,fun,param ] for i in range(pa._processes) ]
+				v = pa.map(_proc_fork_func, pm)
+				return v
+			else:
+				return fun(self, param)
+		else:
+			raise ValueError('`ncpu` should be a numeric value or `multiprocessing.pool.Pool`.')
+

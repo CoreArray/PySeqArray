@@ -702,7 +702,7 @@ PY_EXPORT PyObject* SEQ_GetSpace(PyObject *self, PyObject *args)
 }
 
 
-/*
+
 // ===========================================================
 
 inline static C_BOOL *CLEAR_SELECTION(size_t num, C_BOOL *p)
@@ -725,52 +725,39 @@ inline static C_BOOL *SKIP_SELECTION(size_t num, C_BOOL *p)
 }
 
 /// split the selected variants according to multiple processes
-PY_EXPORT PyObject* SEQ_SplitSelection(PyObject* gdsfile, PyObject* split,
-	PyObject* index, PyObject* n_process, PyObject* selection_flag)
+PY_EXPORT PyObject* SEQ_SplitSelection(PyObject *self, PyObject *args)
 {
-	const char *split_str = CHAR(STRING_ELT(split, 0));
-	int Process_Index = Rf_asInteger(index) - 1;  // starting from 0
-	int Num_Process = Rf_asInteger(n_process);
-	int SelFlag = Rf_asLogical(selection_flag);
+	int file_id, proc_idx, proc_ncpu;
+	const char *split;
+	if (!PyArg_ParseTuple(args, "iiis", &file_id, &proc_idx, &proc_ncpu, &split))
+		return NULL;
 
 	COREARRAY_TRY
 
 		// selection object
-		CFileInfo &File = GetFileInfo(gdsfile);
+		CFileInfo &File = GetFileInfo(file_id);
 		TSelection &s = File.Selection();
 
 		// the total number of selected elements
 		int SelectCount;
 		C_BOOL *sel;
-		if (strcmp(split_str, "by.variant") == 0)
+		if (strcmp(split, "by.variant") == 0)
 		{
-			if (s.Variant.empty())
-			{
-				s.Variant.resize(
-					GDS_Array_GetTotalCount(GDS_Node_Path(
-					GDS_R_SEXP2FileRoot(gdsfile), "variant.id", TRUE)), TRUE);
-			}
 			sel = &s.Variant[0];
 			SelectCount = GetNumOfTRUE(sel, s.Variant.size());
-		} else if (strcmp(split_str, "by.sample") == 0)
+		} else if (strcmp(split, "by.sample") == 0)
 		{
-			if (s.Sample.empty())
-			{
-				s.Sample.resize(
-					GDS_Array_GetTotalCount(GDS_Node_Path(
-					GDS_R_SEXP2FileRoot(gdsfile), "sample.id", TRUE)), TRUE);
-			}
 			sel = &s.Sample[0];
 			SelectCount = GetNumOfTRUE(sel, s.Sample.size());
 		} else {
-			return rv_ans;
+			throw ErrSeqArray("Invalid 'split'.");
 		}
 
 		// split a list
-		vector<int> split(Num_Process);
-		double avg = (double)SelectCount / Num_Process;
+		vector<int> split(proc_ncpu);
+		double avg = (double)SelectCount / proc_ncpu;
 		double start = 0;
-		for (int i=0; i < Num_Process; i++)
+		for (int i=0; i < proc_ncpu; i++)
 		{
 			start += avg;
 			split[i] = (int)(start + 0.5);
@@ -778,20 +765,21 @@ PY_EXPORT PyObject* SEQ_SplitSelection(PyObject* gdsfile, PyObject* split,
 
 		// ---------------------------------------------------
 		int st = 0;
-		for (int i=0; i < Process_Index; i++)
+		for (int i=0; i < proc_idx; i++)
 		{
 			sel = CLEAR_SELECTION(split[i] - st, sel);
 			st = split[i];
 		}
-		int ans_n = split[Process_Index] - st;
+		int ans_n = split[proc_idx] - st;
 		sel = SKIP_SELECTION(ans_n, sel);
-		st = split[Process_Index];
-		for (int i=Process_Index+1; i < Num_Process; i++)
+		st = split[proc_idx];
+		for (int i=proc_idx+1; i < proc_ncpu; i++)
 		{
 			sel = CLEAR_SELECTION(split[i] - st, sel);
 			st = split[i];
 		}
 
+		/*
 		// ---------------------------------------------------
 		// output
 		if (SelFlag == TRUE)
@@ -799,17 +787,18 @@ PY_EXPORT PyObject* SEQ_SplitSelection(PyObject* gdsfile, PyObject* split,
 			rv_ans = NEW_LOGICAL(SelectCount);
 			int *p = INTEGER(rv_ans);
 			memset((void*)p, 0, sizeof(int) * size_t(SelectCount));
-			if (Process_Index > 0)
-				p += split[Process_Index-1];
+			if (proc_idx > 0)
+				p += split[proc_idx-1];
 			for (; ans_n > 0; ans_n--) *p++ = TRUE;
 		} else {
 			rv_ans = ScalarInteger(ans_n);
 		}
+		*/
 
-	COREARRAY_CATCH
+	COREARRAY_CATCH_NONE
 }
 
-
+/*
 /// set a working space with selected variant id
 PY_EXPORT PyObject* SEQ_Summary(PyObject* gdsfile, PyObject* varname)
 {
@@ -1031,6 +1020,7 @@ static PyMethodDef module_methods[] = {
 
 	{ "flt_push", (PyCFunction)SEQ_FilterPush, METH_VARARGS, NULL },
 	{ "flt_pop", (PyCFunction)SEQ_FilterPop, METH_VARARGS, NULL },
+	{ "flt_split", (PyCFunction)SEQ_SplitSelection, METH_VARARGS, NULL },
 
 	{ "set_sample", (PyCFunction)SEQ_SetSpaceSample, METH_VARARGS, NULL },
 	{ "set_sample2", (PyCFunction)SEQ_SetSpaceSample2, METH_VARARGS, NULL },
