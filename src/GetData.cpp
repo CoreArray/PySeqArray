@@ -524,7 +524,7 @@ COREARRAY_DLL_EXPORT PyObject* SEQ_BApply_Variant(PyObject *self, PyObject *args
 			}
 
 			// store data
-			if (rv_ans)
+			if (rv_ans && val!=Py_None)
 				PyList_SetItem(rv_ans, idx, val);
 
 			progress.Forward();

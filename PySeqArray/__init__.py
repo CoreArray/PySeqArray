@@ -363,43 +363,44 @@ class SeqArrayFile(pygds.gdsfile):
 		None, a list or a numpy array object
 		"""
 		# check
-		if isinstance(ncpu, (int, float, pl.Pool)):
-			if isinstance(ncpu, (int, float)):
-				if ncpu <= 0:
-					ncpu = mp.cpu_count() - 1
-					if ncpu <= 0:
-						ncpu = 1
-				if ncpu >= 2:
-					pa = pl.Pool(processes=ncpu)
-			else:
-				pa = ncpu
-				ncpu = pa._processes
-			# run
-			if ncpu >= 2:
-				# direct forking or not
-				is_fork = False
-				if isinstance(ncpu, (int, float)):
-					is_fork = (platform=="linux" or platform=="linux2" or
-						platform=="unix" or platform=="darwin")
-				if is_fork:
-					pm = [ [ i,ncpu,self,fun,param,split ] for i in range(ncpu) ]
-					v = pa.map(_proc_fork_func, pm)
-				else:
-					sel = [ self.FilterGet(True), self.FilterGet(False) ]
-					pm = [ [ i,ncpu,self.filename,fun,param,sel,split ] for i in range(ncpu) ]
-					v = pa.map(_proc_func, pm)
-				# output
-				if combine == 'none':
-					v = None
-				elif combine == 'unlist':
-					v = np.hstack(v)
-				elif callable(combine):
-					v = reduce(combine, v)
-				elif combine != 'list':
-					raise ValueError('`combine` is invalid.')
-				return v
-			else:
-				return fun(self, param)
-		else:
+		if not isinstance(ncpu, (int, float, pl.Pool)):
 			raise ValueError('`ncpu` should be a numeric value or `multiprocessing.pool.Pool`.')
+		if not (combine is None or isinstance(combine, str) or callable(combine)):
+		# run
+		if isinstance(ncpu, (int, float)):
+			if ncpu <= 0:
+				ncpu = mp.cpu_count() - 1
+				if ncpu <= 0:
+					ncpu = 1
+			if ncpu >= 1:
+				pa = pl.Pool(processes=ncpu)
+		else:
+			pa = ncpu
+			ncpu = pa._processes
+		# run
+		if ncpu >= 1:
+			# direct forking or not
+			is_fork = False
+			if isinstance(ncpu, (int, float)):
+				is_fork = (platform=="linux" or platform=="linux2" or
+					platform=="unix" or platform=="darwin")
+			if is_fork:
+				pm = [ [ i,ncpu,self,fun,param,split ] for i in range(ncpu) ]
+				v = pa.map(_proc_fork_func, pm)
+			else:
+				sel = [ self.FilterGet(True), self.FilterGet(False) ]
+				pm = [ [ i,ncpu,self.filename,fun,param,sel,split ] for i in range(ncpu) ]
+				v = pa.map(_proc_func, pm)
+			# output
+			if combine is None or combine == 'none':
+				v = None
+			elif combine == 'unlist':
+				v = np.hstack(v)
+			elif callable(combine):
+				v = reduce(combine, v)
+			elif combine != 'list':
+				raise ValueError('`combine` is invalid.')
+			return v
+		else:
+			return fun(self, param)
 

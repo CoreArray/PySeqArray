@@ -2,7 +2,7 @@ PySeqArray: data manipulation of whole-genome sequencing variants with SeqArray 
 ===
 
 ![GPLv3](http://www.gnu.org/graphics/gplv3-88x31.png)
-[GNU General Public License, GPLv3](http://www.gnu.org/copyleft/gpl.html)
+[GNU General Public License, GPLv3](http://www.gnu.org/copyleft/gpl.html) (2017)
 
 [![Build Status](https://travis-ci.org/CoreArray/PySeqArray.png)](https://travis-ci.org/CoreArray/PySeqArray)
 
@@ -21,6 +21,8 @@ The SeqArray format is built on top of Genomic Data Structure (GDS) data format,
 Python 2 (2.6-2.7), and Python 3 (3.3-3.6)
 
 NumPy 1.6.0 or later
+
+[pygds](https://github.com/CoreArray/pygds)
 
 
 ## Installation
