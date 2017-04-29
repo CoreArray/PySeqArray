@@ -366,6 +366,7 @@ class SeqArrayFile(pygds.gdsfile):
 		if not isinstance(ncpu, (int, float, pl.Pool)):
 			raise ValueError('`ncpu` should be a numeric value or `multiprocessing.pool.Pool`.')
 		if not (combine is None or isinstance(combine, str) or callable(combine)):
+			raise ValueError('`combine` should be None, a string or a function.')
 		# run
 		if isinstance(ncpu, (int, float)):
 			if ncpu <= 0:
