@@ -755,6 +755,27 @@ static const double S_HOUR =  60 * S_MIN;
 static const double S_DAY  =  24 * S_HOUR;
 static const double S_YEAR = 365 * S_DAY;
 
+static const char *time_str(double s)
+{
+	if (GDS_Mach_Finite(s))
+	{
+		static char buffer[64];
+		if (s < S_MIN)
+			sprintf(buffer, "%.0fs", s);
+		else if (s < S_HOUR)
+			sprintf(buffer, "%.1fm", s/S_MIN);
+		else if (s < S_DAY)
+			sprintf(buffer, "%.1fh", s/S_HOUR);
+		else if (s < S_YEAR)
+			sprintf(buffer, "%.1fd", s/S_DAY);
+		else
+			sprintf(buffer, "%.1f years", s/S_YEAR);
+		return buffer;
+	} else
+		return "---";
+}
+
+
 CProgress::CProgress(C_Int64 start, C_Int64 count, FILE *conn, bool newline)
 {
 	TotalCount = count;
@@ -779,6 +800,7 @@ CProgress::CProgress(C_Int64 start, C_Int64 count, FILE *conn, bool newline)
 	}
 
 	time_t s; time(&s);
+	_start_time = s;
 	_timer.reserve(128);
 	_timer.push_back(pair<double, time_t>(percent, s));
 
@@ -838,37 +860,9 @@ void CProgress::ShowProgress()
 			// show
 			if (NewLine)
 			{
-				if (GDS_Mach_Finite(s))
-				{
-					if (s < S_MIN)
-						fprintf(File, "[%s] %2.0f%%, ETC: %.0fs\n", bar, p, s);
-					else if (s < S_HOUR)
-						fprintf(File, "[%s] %2.0f%%, ETC: %.1fm\n", bar, p, s/S_MIN);
-					else if (s < S_DAY)
-						fprintf(File, "[%s] %2.0f%%, ETC: %.1fh\n", bar, p, s/S_HOUR);
-					else if (s < S_YEAR)
-						fprintf(File, "[%s] %2.0f%%, ETC: %.1fd\n", bar, p, s/S_DAY);
-					else
-						fprintf(File, "[%s] %2.0f%%, ETC: %.1f years\n", bar, p, s/S_YEAR);
-				} else {
-					fprintf(File, "[%s] %2.0f%%, ETC: ---\n", bar, p);
-				}
+				fprintf(File, "[%s] %2.0f%%, ETC: %s\n", bar, p, time_str(s));
 			} else {
-				if (GDS_Mach_Finite(s))
-				{
-					if (s < S_MIN)
-						fprintf(File, "\r[%s] %2.0f%%, ETC: %.0fs  ", bar, p, s);
-					else if (s < S_HOUR)
-						fprintf(File, "\r[%s] %2.0f%%, ETC: %.1fm  ", bar, p, s/S_MIN);
-					else if (s < S_DAY)
-						fprintf(File, "\r[%s] %2.0f%%, ETC: %.1fh  ", bar, p, s/S_HOUR);
-					else if (s < S_YEAR)
-						fprintf(File, "\r[%s] %2.0f%%, ETC: %.1fd  ", bar, p, s/S_DAY);
-					else
-						fprintf(File, "\r[%s] %2.0f%%, ETC: %.1f years", bar, p, s/S_YEAR);
-				} else {
-					fprintf(File, "\r[%s] %2.0f%%, ETC: ---  ", bar, p);
-				}
+				fprintf(File, "\r[%s] %2.0f%%, ETC: %s    ", bar, p, time_str(s));
 				if (Counter >= TotalCount) fprintf(File, "\n");
 			}
 		} else {
@@ -934,25 +928,12 @@ void CProgressStdOut::ShowProgress()
 		// show
 		if (Counter >= TotalCount)
 		{
-			printf("\r[%s] 100%%, completed      \n", bar);
+			s = difftime(_last_time, _start_time);
+			printf("\r[%s] 100%%, completed in %s\n", bar, time_str(s));
 		} else if ((interval >= 5) || (Counter <= 0))
 		{
 			_last_time = now;
-			if (GDS_Mach_Finite(s))
-			{
-				if (s < S_MIN)
-					printf("\r[%s] %2.0f%%, ETC: %.0fs  ", bar, p, s);
-				else if (s < S_HOUR)
-					printf("\r[%s] %2.0f%%, ETC: %.1fm  ", bar, p, s/S_MIN);
-				else if (s < S_DAY)
-					printf("\r[%s] %2.0f%%, ETC: %.1fh  ", bar, p, s/S_HOUR);
-				else if (s < S_YEAR)
-					printf("\r[%s] %2.0f%%, ETC: %.1fd  ", bar, p, s/S_DAY);
-				else
-					printf("\r[%s] %2.0f%%, ETC: %.1f years  ", bar, p, s/S_YEAR);
-			} else {
-				printf("\r[%s] %2.0f%%, ETC: ---    ", bar, p);
-			}
+			printf("\r[%s] %2.0f%%, ETC: %s    ", bar, p, time_str(s));
 		}
 	}
 }
