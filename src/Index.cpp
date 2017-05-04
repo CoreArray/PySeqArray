@@ -138,7 +138,7 @@ PyObject* CIndex::GetLen_Sel(const C_BOOL sel[])
 	const C_BOOL *p = (C_BOOL *)vec_i8_cnt_nonzero_ptr((const int8_t *)sel,
 		TotalLength, &n);
 	// create a numpy array object
-	npy_intp dims[] = { n };
+	npy_intp dims[1] = { (npy_intp)n };
 	PyObject *ans = PyArray_SimpleNew(1, dims, NPY_INT32);
 	if (n > 0)
 	{
@@ -187,7 +187,7 @@ PyObject* CIndex::GetLen_Sel(const C_BOOL sel[], int &out_var_start,
 	const C_BOOL *p = (C_BOOL *)vec_i8_cnt_nonzero_ptr((const int8_t *)sel,
 		TotalLength, &n);
 	// create a numpy array object
-	npy_intp dims[] = { n };
+	npy_intp dims[1] = { (npy_intp)n };
 	PyObject *ans = PyArray_SimpleNew(1, dims, NPY_INT32);
 	out_var_start = 0;
 	out_var_count = 0;
@@ -1145,7 +1145,7 @@ static const char *err_new_array = "Fails to allocate a new numpy array object."
 
 static PyObject* new_array(size_t n, NPY_TYPES type)
 {
-	npy_intp dims[1] = { n };
+	npy_intp dims[1] = { (npy_intp)n };
 	PyObject *rv = PyArray_SimpleNew(1, dims, type);
 	if (rv == NULL) throw ErrSeqArray(err_new_array);
 	return rv;
@@ -1164,7 +1164,7 @@ COREARRAY_DLL_LOCAL PyObject* numpy_new_uint8(size_t n)
 
 COREARRAY_DLL_LOCAL PyObject* numpy_new_uint8_mat(size_t n1, size_t n2)
 {
-	npy_intp dims[2] = { n1, n2 };
+	npy_intp dims[2] = { (npy_intp)n1, (npy_intp)n2 };
 	PyObject *rv = PyArray_SimpleNew(2, dims, NPY_UINT8);
 	if (rv == NULL) throw ErrSeqArray(err_new_array);
 	return rv;
@@ -1172,7 +1172,7 @@ COREARRAY_DLL_LOCAL PyObject* numpy_new_uint8_mat(size_t n1, size_t n2)
 
 COREARRAY_DLL_LOCAL PyObject* numpy_new_uint8_dim3(size_t n1, size_t n2, size_t n3)
 {
-	npy_intp dims[3] = { n1, n2, n3 };
+	npy_intp dims[3] = { (npy_intp)n1, (npy_intp)n2, (npy_intp)n3 };
 	PyObject *rv = PyArray_SimpleNew(3, dims, NPY_UINT8);
 	if (rv == NULL) throw ErrSeqArray(err_new_array);
 	return rv;
@@ -1186,7 +1186,7 @@ COREARRAY_DLL_LOCAL PyObject* numpy_new_int32(size_t n)
 
 COREARRAY_DLL_LOCAL PyObject* numpy_new_int32_mat(size_t n1, size_t n2)
 {
-	npy_intp dims[2] = { n1, n2 };
+	npy_intp dims[2] = { (npy_intp)n1, (npy_intp)n2 };
 	PyObject *rv = PyArray_SimpleNew(2, dims, NPY_INT32);
 	if (rv == NULL) throw ErrSeqArray(err_new_array);
 	return rv;
@@ -1194,7 +1194,7 @@ COREARRAY_DLL_LOCAL PyObject* numpy_new_int32_mat(size_t n1, size_t n2)
 
 COREARRAY_DLL_LOCAL PyObject* numpy_new_int32_dim3(size_t n1, size_t n2, size_t n3)
 {
-	npy_intp dims[3] = { n1, n2, n3 };
+	npy_intp dims[3] = { (npy_intp)n1, (npy_intp)n2, (npy_intp)n3 };
 	PyObject *rv = PyArray_SimpleNew(3, dims, NPY_INT32);
 	if (rv == NULL) throw ErrSeqArray(err_new_array);
 	return rv;

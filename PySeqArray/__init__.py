@@ -14,6 +14,9 @@ from sys import platform
 from functools import reduce
 
 
+## export version number
+__version__ = '0.1'
+
 
 
 # ===========================================================================
