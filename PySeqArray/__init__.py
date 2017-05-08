@@ -15,7 +15,7 @@ from functools import reduce
 
 
 ## export version number
-__version__ = '0.1'
+__version__ = '0.1.0'
 
 
 
@@ -62,6 +62,7 @@ def _proc_func(x):
 	i = x[0]; ncpu = x[1]
 	fn = x[2]; fun = x[3]; param = x[4]; sel = x[5]; split = x[6]
 	import PySeqArray
+	import PySeqArray.ccall as cc
 	file = PySeqArray.SeqArrayFile()
 	file.open(fn, allow_dup=True)
 	file.FilterSet2(sel[0], sel[1], verbose=False)
@@ -382,7 +383,7 @@ class SeqArrayFile(pygds.gdsfile):
 			pa = ncpu
 			ncpu = pa._processes
 		# run
-		if ncpu >= 1:
+		if ncpu > 1:
 			# direct forking or not
 			is_fork = False
 			if isinstance(ncpu, (int, float)):
@@ -407,4 +408,14 @@ class SeqArrayFile(pygds.gdsfile):
 			return v
 		else:
 			return fun(self, param)
+
+
+	####  Methods  ####
+
+	def AlleleFreq(self, ref, ncpu, verbose=False):
+		if not (isinstance(ref, (int, float)) or ref is None):
+			raise ValueError('`ref` should be a numeric value or None.')
+		self.RunParallel((lambda file, param:
+				file.Apply('genotype', cc.calc_af, as_is='unlist')),
+			param=[ ref, verbose ], ncpu=ncpu)
 

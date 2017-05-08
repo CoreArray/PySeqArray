@@ -5,12 +5,12 @@ import pygds
 
 
 src_fnlst = [ os.path.join('src', fn) for fn in [
-	'GetData.cpp', 'Index.cpp', 'ReadByVariant.cpp',
+	'GetData.cpp', 'Index.cpp', 'Methods.cpp', 'ReadByVariant.cpp',
 	'PySeqArray.cpp', 'LinkGDS.c', 'vectorization.c' ] ]
 
 
 setup(name='PySeqArray',
-	version = '0.1',
+	version = '0.1.0',
 	description = 'Python Interface to SeqArray Files for Data Management of Whole-Genome Sequence Variant Calls',
 	url = 'http://github.com/CoreArray/PySeqArray',
 	author = 'Xiuwen Zheng',

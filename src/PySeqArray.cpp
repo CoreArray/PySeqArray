@@ -1013,7 +1013,9 @@ PY_EXPORT PyObject* SEQ_System()
 // Register routines
 
 extern PyObject* SEQ_GetData(PyObject *self, PyObject *args);
-COREARRAY_DLL_EXPORT PyObject* SEQ_BApply_Variant(PyObject *self, PyObject *args);
+extern PyObject* SEQ_BApply_Variant(PyObject *self, PyObject *args);
+
+extern PyObject* FC_CalcAF(PyObject *self, PyObject *args);
 
 
 static PyMethodDef module_methods[] = {
@@ -1035,6 +1037,9 @@ static PyMethodDef module_methods[] = {
 	// get data
     { "get_data", (PyCFunction)SEQ_GetData, METH_VARARGS, NULL },
     { "apply", (PyCFunction)SEQ_BApply_Variant, METH_VARARGS, NULL },
+
+	// get data
+	// { "calc_af", (PyCFunction)FC_CalcAF, METH_VARARGS, NULL },
 
 	// end
 	{ NULL, NULL, 0, NULL }

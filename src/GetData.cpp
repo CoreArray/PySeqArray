@@ -375,6 +375,60 @@ static PyObject* VarGetData(CFileInfo &File, const char *name)
 			NodeVar.Next();
 		}
 
+	} else if (strcmp(name, "$ref") == 0)
+	{
+		// ===========================================================
+		// the reference allele
+
+		PdAbstractArray N = File.GetObj("allele", TRUE);
+		// check
+		if ((GDS_Array_DimCnt(N) != 1) ||
+				(GDS_Array_GetTotalCount(N) != File.VariantNum()))
+			throw ErrSeqArray(ERR_DIM, name);
+		// read
+		size_t n = File.VariantSelNum();
+		vector<string> buffer(n);
+		C_BOOL *ss = Sel.pVariant();
+		GDS_Array_ReadDataEx(N, NULL, NULL, &ss, &buffer[0], svStrUTF8);
+		// output
+		rv_ans = numpy_new_string(n);
+		PyObject **pi = (PyObject**)numpy_getptr(rv_ans);
+		for (size_t i=0; i < n; i++)
+		{
+			const char *p = buffer[i].c_str();
+			size_t m = 0;
+			for (const char *s=p; *s!=',' && *s!=0; s++) m++;
+			numpy_setval(rv_ans, pi, PYSTR_SET2(p, m));
+			pi ++;
+		}
+
+	} else if (strcmp(name, "$alt") == 0)
+	{
+		// ===========================================================
+		// the reference allele
+
+		PdAbstractArray N = File.GetObj("allele", TRUE);
+		// check
+		if ((GDS_Array_DimCnt(N) != 1) ||
+				(GDS_Array_GetTotalCount(N) != File.VariantNum()))
+			throw ErrSeqArray(ERR_DIM, name);
+		// read
+		size_t n = File.VariantSelNum();
+		vector<string> buffer(n);
+		C_BOOL *ss = Sel.pVariant();
+		GDS_Array_ReadDataEx(N, NULL, NULL, &ss, &buffer[0], svStrUTF8);
+		// output
+		rv_ans = numpy_new_string(n);
+		PyObject **pi = (PyObject**)numpy_getptr(rv_ans);
+		for (size_t i=0; i < n; i++)
+		{
+			const char *p = buffer[i].c_str();
+			for (; *p!=',' && *p!=0; p++);
+			if (*p == ',') p++;
+			numpy_setval(rv_ans, pi, PYSTR_SET(p));
+			pi ++;
+		}
+
 	} else {
 		throw ErrSeqArray(
 			"'%s' is not a standard variable name, and the standard format:\n"
