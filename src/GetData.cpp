@@ -164,7 +164,7 @@ static PyObject* VarGetData(CFileInfo &File, const char *name)
 		C_BOOL *ss = Sel.pVariant();
 		rv_ans = GDS_Py_Array_Read(N, NULL, NULL, &ss, svInt32);
 
-	} else if (strcmp(name, "$dosage") == 0)
+	} else if (strcmp(name, "$dosage")==0 || strcmp(name, "#dosage")==0)
 	{
 		// ===========================================================
 		// dosage data
@@ -313,7 +313,7 @@ static PyObject* VarGetData(CFileInfo &File, const char *name)
 			ss[1] = NeedArrayTRUEs(dim[1]);
 		rv_ans = GDS_Py_Array_Read(N, NULL, NULL, ss, svCustom);
 
-	} else if (strcmp(name, "$chrom_pos") == 0)
+	} else if (strcmp(name, "$chrom_pos")==0 || strcmp(name, "#chrom_pos")==0)
 	{
 		// ===========================================================
 		// chromosome-position
@@ -359,7 +359,7 @@ static PyObject* VarGetData(CFileInfo &File, const char *name)
 			}
 		}
 
-	} else if (strcmp(name, "$num_allele") == 0)
+	} else if (strcmp(name, "$num_allele")==0 || strcmp(name, "#num_allele")==0)
 	{
 		// ===========================================================
 		// the number of distinct alleles
@@ -375,7 +375,7 @@ static PyObject* VarGetData(CFileInfo &File, const char *name)
 			NodeVar.Next();
 		}
 
-	} else if (strcmp(name, "$ref") == 0)
+	} else if (strcmp(name, "$ref")==0 || strcmp(name, "#ref")==0)
 	{
 		// ===========================================================
 		// the reference allele
@@ -402,7 +402,7 @@ static PyObject* VarGetData(CFileInfo &File, const char *name)
 			pi ++;
 		}
 
-	} else if (strcmp(name, "$alt") == 0)
+	} else if (strcmp(name, "$alt")==0 || strcmp(name, "#alt")==0)
 	{
 		// ===========================================================
 		// the reference allele

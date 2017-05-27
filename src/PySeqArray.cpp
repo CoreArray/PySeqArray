@@ -55,7 +55,8 @@ PY_EXPORT PyObject* SEQ_File_Init(PyObject *self, PyObject *args)
 		return NULL;
 
 	COREARRAY_TRY
-		GetFileInfo(file_id);
+		CFileInfo &file = GetFileInfo(file_id);
+		file.Selection();  // force to initialize selection
 	COREARRAY_CATCH_NONE
 }
 
