@@ -307,7 +307,7 @@ class SeqArrayFile(pygds.gdsfile):
 		return cc.get_data(self.fileid, name)
 
 
-	def Apply(self, name, fun, param=None, as_is='none', bsize=1024, verbose=False):
+	def Apply(self, name, fun, param=None, asis='none', bsize=1024, verbose=False):
 		"""Apply function over array margins
 
 		Apply a user-defined function to margins of genotypes and annotations via blocking
@@ -320,7 +320,7 @@ class SeqArrayFile(pygds.gdsfile):
 			the user-defined function
 		param: object
 			the parameter passed to the user-defined function if it is not None
-		as_is : str
+		asis : str
 			'none', no return; 'list', a list of the returned values from the user-defined function;
 			'unlist', flatten the returned values from the user-defined function
 		bsize : int
@@ -336,8 +336,8 @@ class SeqArrayFile(pygds.gdsfile):
 		--------
 		FilterSet : set a filter
 		"""
-		v = cc.apply(self.fileid, name, fun, param, as_is, bsize, verbose)
-		if as_is == 'unlist':
+		v = cc.apply(self.fileid, name, fun, param, asis, bsize, verbose)
+		if asis == 'unlist':
 			v = np.hstack(v)
 		return(v)
 
