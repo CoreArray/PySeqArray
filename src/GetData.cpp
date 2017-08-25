@@ -513,7 +513,7 @@ COREARRAY_DLL_EXPORT PyObject* SEQ_BApply_Variant(PyObject *self, PyObject *args
 			rv_ans = PyList_New(NumBlock);
 		} else if (strcmp(as_is, "none") != 0)
 		{
-			throw ErrSeqArray("'as_is' should be 'none', 'list' or 'unlist'.");
+			throw ErrSeqArray("'asis' should be 'none', 'list' or 'unlist'.");
 		}
 
 		// function arguments
