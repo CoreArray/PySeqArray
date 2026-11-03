@@ -117,6 +117,20 @@ def test_apply(f):
 	assert f.Apply('position', lambda x: None) is None
 
 
+def test_apply_error(f):
+	# the filter is restored after an error
+	f.FilterSet2(variant=np.arange(1000), verbose=False)
+	def fail(x):
+		raise ValueError('an error')
+	with pytest.raises(ValueError):
+		f.Apply('position', fail, bsize=100)
+	assert len(f.GetData('position')) == 1000
+	# an error in the C code
+	with pytest.raises(RuntimeError):
+		f.Apply('no.such.variable', lambda x: x, bsize=100)
+	assert len(f.GetData('position')) == 1000
+
+
 @pytest.mark.skipif(not has_fork, reason='no fork')
 def test_run_parallel_fork(f):
 	f.FilterSet2(variant=np.arange(100, 1100), verbose=False)

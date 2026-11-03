@@ -26,6 +26,18 @@
 
 using namespace PySeqArray;
 
+
+/// pop the last selection when leaving the scope, even with an error
+class COREARRAY_DLL_LOCAL CPopSelection
+{
+public:
+	CPopSelection(CFileInfo &file): File(file) { }
+	~CPopSelection() { File.SelList.pop_back(); }
+private:
+	CFileInfo &File;
+};
+
+
 extern "C"
 {
 
@@ -527,8 +539,9 @@ COREARRAY_DLL_EXPORT PyObject* SEQ_BApply_Variant(PyObject *self, PyObject *args
 			PyTuple_SetItem(args, 0, obj);
 		}
 
-		// local selection
+		// local selection, removed afterward even if the user-defined function fails
 		File.SelList.push_back(TSelection());
+		CPopSelection pop_sel(File);
 		TSelection &Sel = File.SelList.back();
 		Sel.Sample = Selection.Sample;
 		Sel.Variant.resize(File.VariantNum());
@@ -584,7 +597,6 @@ COREARRAY_DLL_EXPORT PyObject* SEQ_BApply_Variant(PyObject *self, PyObject *args
 			progress.Forward();
 		}
 
-		File.SelList.pop_back();
 		Py_DECREF(args);
 
 		// finally
