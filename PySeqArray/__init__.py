@@ -10,7 +10,6 @@ import pycorearray
 # import c library
 import PySeqArray.ccall as cc
 # other ...
-from sys import platform
 from functools import reduce
 
 
@@ -50,12 +49,21 @@ def seqExample(filename=None):
 
 # ===========================================================================
 
+# the file, user-defined function, parameter and split passed to the forked
+# processes, which inherit them (and the opened file) from the parent process
+_fork_param = None
+
 # define internal function using forking
 def _proc_fork_func(x):
 	i = x[0]; ncpu = x[1]
-	file = x[2]; fun = x[3]; param = x[4]; split = x[5]
-	cc.flt_split(file.fileid, i, ncpu, split)
-	return fun(file, param)
+	file, fun, param, split = _fork_param
+	# a process may run more than one job, so restore the filter afterward
+	cc.flt_push(file.fileid, False)
+	try:
+		cc.flt_split(file.fileid, i, ncpu, split)
+		return fun(file, param)
+	finally:
+		cc.flt_pop(file.fileid)
 
 # define a process function
 def _proc_func(x):
@@ -365,37 +373,48 @@ class SeqArrayFile(pycorearray.gdsfile):
 		Returns
 		-------
 		None, a list or a numpy array object
+
+		Notes
+		-----
+		If `ncpu` is a number, the processes are forked on Linux and macOS,
+		and share the opened file and the filter. Otherwise (a Pool, or on
+		Windows), each process opens the file again, so `fun` and `param`
+		should be picklable (e.g., `fun` is not a lambda function).
 		"""
 		# check
 		if not isinstance(ncpu, (int, float, pl.Pool)):
 			raise ValueError('`ncpu` should be a numeric value or `multiprocessing.pool.Pool`.')
 		if not (combine is None or isinstance(combine, str) or callable(combine)):
 			raise ValueError('`combine` should be None, a string or a function.')
-		# run
-		if isinstance(ncpu, (int, float)):
-			if ncpu <= 0:
-				ncpu = mp.cpu_count() - 1
-				if ncpu <= 0:
-					ncpu = 1
-			if ncpu >= 1:
-				pa = pl.Pool(processes=ncpu)
+		# the number of processes
+		if isinstance(ncpu, pl.Pool):
+			pool = ncpu
+			ncpu = pool._processes
 		else:
-			pa = ncpu
-			ncpu = pa._processes
+			pool = None
+			ncpu = int(ncpu)
+			if ncpu <= 0:
+				ncpu = max(mp.cpu_count() - 1, 1)
 		# run
 		if ncpu > 1:
-			# direct forking or not
-			is_fork = False
-			if isinstance(ncpu, (int, float)):
-				is_fork = (platform=="linux" or platform=="linux2" or
-					platform=="unix" or platform=="darwin")
-			if is_fork:
-				pm = [ [ i,ncpu,self,fun,param,split ] for i in range(ncpu) ]
-				v = pa.map(_proc_fork_func, pm)
+			# fork explicitly, since it is not the default start method on
+			# macOS (Python >= 3.8) or Linux (Python >= 3.14)
+			if pool is None and 'fork' in mp.get_all_start_methods():
+				global _fork_param
+				_fork_param = (self, fun, param, split)
+				try:
+					with mp.get_context('fork').Pool(processes=ncpu) as pa:
+						v = pa.map(_proc_fork_func, [ [ i,ncpu ] for i in range(ncpu) ])
+				finally:
+					_fork_param = None
 			else:
 				sel = [ self.FilterGet(True), self.FilterGet(False) ]
 				pm = [ [ i,ncpu,self.filename,fun,param,sel,split ] for i in range(ncpu) ]
-				v = pa.map(_proc_func, pm)
+				if pool is None:
+					with pl.Pool(processes=ncpu) as pa:
+						v = pa.map(_proc_func, pm)
+				else:
+					v = pool.map(_proc_func, pm)
 			# output
 			if combine is None or combine == 'none':
 				v = None
