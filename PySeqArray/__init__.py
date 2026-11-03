@@ -234,9 +234,12 @@ class SeqArrayFile(pycorearray.gdsfile):
 		FilterSet : set a filter
 		FilterReset : reset the filter
 		"""
+		# the C code requires a contiguous numpy array
 		if not sample is None:
+			sample = np.ascontiguousarray(sample)
 			cc.set_sample2(self.fileid, sample, intersect, verbose)
 		if not variant is None:
+			variant = np.ascontiguousarray(variant)
 			cc.set_variant2(self.fileid, variant, intersect, verbose)
 
 
@@ -268,7 +271,7 @@ class SeqArrayFile(pycorearray.gdsfile):
 			cc.set_variant(self.fileid, None, False, verbose)
 
 
-	def FilterPush(reset=True):
+	def FilterPush(self, reset=True):
 		"""Push a filter
 
 		Push the current filter to the stack.
@@ -289,7 +292,7 @@ class SeqArrayFile(pycorearray.gdsfile):
 		cc.flt_push(self.fileid, reset)
 
 
-	def FilterPop():
+	def FilterPop(self):
 		"""Pop a filter
 
 		Pop or recover the last filter in the stack.
