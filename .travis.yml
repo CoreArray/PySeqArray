@@ -6,6 +6,6 @@ python:
   - "3.5"
   - "3.6"
 # command to install dependencies
-install: "pip install git+git://github.com/CoreArray/pygds.git"
+install: "pip install git+https://github.com/CoreArray/pycorearray.git"
 # command to run tests
 script: "pip install ."

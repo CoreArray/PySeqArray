@@ -5,8 +5,8 @@ import os
 # import multiprocessing
 import multiprocessing as mp
 import multiprocessing.pool as pl
-# import pygds
-import pygds
+# import pycorearray
+import pycorearray
 # import c library
 import PySeqArray.ccall as cc
 # other ...
@@ -73,17 +73,17 @@ def _proc_func(x):
 
 # ===========================================================================
 
-class SeqArrayFile(pygds.gdsfile):
+class SeqArrayFile(pycorearray.gdsfile):
 	"""
 	Class for SeqArray GDS files
 	"""
 
 	def __init__(self):
-		pygds.gdsfile.__init__(self)
+		pycorearray.gdsfile.__init__(self)
 
 	def __del__(self):
 		cc.file_done(self.fileid)
-		pygds.gdsfile.__del__(self)
+		pycorearray.gdsfile.__del__(self)
 
 
 	def create(self, filename, allow_dup=False):
@@ -112,7 +112,7 @@ class SeqArrayFile(pygds.gdsfile):
 		--------
 		close: close a SeqArray file
 		"""
-		pygds.gdsfile.open(self, filename, readonly, allow_dup)
+		pycorearray.gdsfile.open(self, filename, readonly, allow_dup)
 		cc.file_init(self.fileid)
 		# TODO: file checking
 
@@ -131,7 +131,7 @@ class SeqArrayFile(pygds.gdsfile):
 		open : open an existing SeqArray file
 		"""
 		cc.file_done(self.fileid)
-		pygds.gdsfile.close(self)
+		pycorearray.gdsfile.close(self)
 
 
 	def FilterSet(self, sample_id=None, variant_id=None, intersect=False, verbose=True):

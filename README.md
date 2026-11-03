@@ -22,16 +22,16 @@ Python 2 (2.6-2.7), and Python 3 (3.3-3.6)
 
 NumPy 1.6.0 or later
 
-[pygds](https://github.com/CoreArray/pygds)
+[pycorearray](https://github.com/CoreArray/pycorearray)
 
 
 ## Installation
 
 ```sh
-## require the pygds package
-pip install git+git://github.com/CoreArray/pygds.git
+## require the pycorearray package
+pip install git+https://github.com/CoreArray/pycorearray.git
 ## install PySeqArray
-pip install git+git://github.com/CoreArray/PySeqArray.git
+pip install git+https://github.com/CoreArray/PySeqArray.git
 ```
 
 

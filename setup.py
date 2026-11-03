@@ -1,7 +1,7 @@
 from distutils.core import setup, Extension
 import numpy
 import os
-import pygds
+import pycorearray
 
 
 src_fnlst = [ os.path.join('src', fn) for fn in [
@@ -17,10 +17,10 @@ setup(name='PySeqArray',
 	author_email = 'zhengxwen@gmail.com',
 	license = 'GPLv3',
 	packages = [ 'PySeqArray' ],
-	install_requires = [ 'numpy', 'pygds' ], # 'multiprocessing' ],
+	install_requires = [ 'numpy', 'pycorearray' ], # 'multiprocessing' ],
 	ext_modules = [ Extension('PySeqArray.ccall',
 		src_fnlst,
-		include_dirs = [ pygds.get_include(), numpy.get_include() ],
+		include_dirs = [ pycorearray.get_include(), numpy.get_include() ],
 		define_macros = [ ('USING_PYTHON', None) ],
 	) ],
 	package_data = {
