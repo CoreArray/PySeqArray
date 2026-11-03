@@ -117,6 +117,20 @@ def test_apply(f):
 	assert f.Apply('position', lambda x: None) is None
 
 
+def test_apply_none(f):
+	# None returned from some blocks
+	f.FilterSet2(variant=np.arange(100), verbose=False)
+	pos = f.GetData('position')
+	fun = lambda x: None if x[0] == pos[30] else x
+	v = f.Apply('position', fun, asis='list', bsize=30)
+	assert v[1] is None
+	assert np.array_equal(v[0], pos[:30]) and np.array_equal(v[3], pos[90:])
+	v = f.Apply('position', fun, asis='unlist', bsize=30)
+	assert np.array_equal(v, np.hstack([ pos[:30], pos[60:] ]))
+	assert f.Apply('position', lambda x: None, asis='list', bsize=30) == [ None ] * 4
+	assert f.Apply('position', lambda x: None, asis='unlist', bsize=30) is None
+
+
 def test_apply_error(f):
 	# the filter is restored after an error
 	f.FilterSet2(variant=np.arange(1000), verbose=False)

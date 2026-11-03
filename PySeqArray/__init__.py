@@ -365,7 +365,7 @@ class SeqArrayFile(pycorearray.gdsfile):
 			the parameter passed to the user-defined function if it is not None
 		asis : str
 			'none', no return; 'list', a list of the returned values from the user-defined function;
-			'unlist', flatten the returned values from the user-defined function
+			'unlist', flatten the returned values from the user-defined function, ignoring None
 		bsize : int
 			block size
 		verbose : bool
@@ -381,7 +381,9 @@ class SeqArrayFile(pycorearray.gdsfile):
 		"""
 		v = cc.apply(self.fileid, name, fun, param, asis, bsize, verbose)
 		if asis == 'unlist':
-			v = np.hstack(v)
+			# None is ignored, as unlist() in R
+			v = [ x for x in v if x is not None ]
+			v = np.hstack(v) if v else None
 		return(v)
 
 

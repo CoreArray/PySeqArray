@@ -590,9 +590,11 @@ COREARRAY_DLL_EXPORT PyObject* SEQ_BApply_Variant(PyObject *self, PyObject *args
 				return NULL;
 			}
 
-			// store data
-			if (rv_ans && val!=Py_None)
+			// store data, including None (the list steals the reference)
+			if (rv_ans)
 				PyList_SetItem(rv_ans, idx, val);
+			else
+				Py_DECREF(val);
 
 			progress.Forward();
 		}
