@@ -1322,13 +1322,7 @@ COREARRAY_DLL_LOCAL void numpy_to_string(PyObject *obj, vector<string> &out)
 		size_t n = PyArray_SIZE((PyArrayObject*)obj);
 		out.resize(n);
 		for (size_t i=0; i < n; i++)
-		{
-		#if (PY_MAJOR_VERSION >= 3)
 			out[i] = PyUnicode_AsUTF8(*p++);
-		#else
-			out[i] = PyString_AsString(*p++);
-		#endif
-		}
 	} else if (PyList_Check(obj))
 	{
 		size_t n = PyList_Size(obj);
@@ -1336,11 +1330,7 @@ COREARRAY_DLL_LOCAL void numpy_to_string(PyObject *obj, vector<string> &out)
 		for(size_t i=0; i < n; i++)
 		{
 			PyObject *p = PyList_GetItem(obj, i);
-		#if (PY_MAJOR_VERSION >= 3)
 			out[i] = PyUnicode_AsUTF8(p);
-		#else
-			out[i] = PyString_AsString(p);
-		#endif
 		}
 	} else
 		throw ErrSeqArray("Fails to convert a list or a numpty object to a string vector.");

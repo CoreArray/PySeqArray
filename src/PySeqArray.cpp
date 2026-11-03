@@ -1049,8 +1049,6 @@ static PyMethodDef module_methods[] = {
 
 // Module entry point Python
 
-#if PY_MAJOR_VERSION >= 3
-
 static struct PyModuleDef ModStruct =
 {
 	PyModuleDef_HEAD_INIT,
@@ -1064,21 +1062,9 @@ PyMODINIT_FUNC PyInit_ccall()
 {
 	if (!numpy_init()) return NULL;
 	if (Init_GDS_Routines() < 0) return NULL;
-#else
-PyMODINIT_FUNC initccall()
-{
-	if (!numpy_init()) return;
-	if (Init_GDS_Routines() < 0) return;
-#endif
 
 	// create the module and add the functions
-	PyObject *mod;
-#if PY_MAJOR_VERSION >= 3
-	mod = PyModule_Create(&ModStruct);
-	return mod;
-#else
-	mod = Py_InitModule("PySeqArray.ccall", module_methods);
-#endif
+	return PyModule_Create(&ModStruct);
 }
 
 } // extern "C"
