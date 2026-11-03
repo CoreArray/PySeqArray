@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # for building pycorearray
+      - name: Install liblzma
+        if: runner.os == 'macOS'
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+          HOMEBREW_NO_INSTALL_UPGRADE: 1
+        run: brew install xz
+
+      - name: Install build tools
+        run: python -m pip install --upgrade pip setuptools numpy pytest
+
+      # from GitHub until pycorearray is released on PyPI
+      - name: Build & install pycorearray
+        run: pip install git+https://github.com/CoreArray/pycorearray.git
+
+      # compiled against the C header files of the installed pycorearray
+      - name: Build & install PySeqArray (C extension)
+        run: pip install --no-build-isolation .
+
+      - name: Run tests
+        run: pytest tests/ -v

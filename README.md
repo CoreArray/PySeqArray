@@ -4,7 +4,7 @@ PySeqArray: data manipulation of whole-genome sequencing variants with SeqArray 
 ![GPLv3](http://www.gnu.org/graphics/gplv3-88x31.png)
 [GNU General Public License, GPLv3](http://www.gnu.org/copyleft/gpl.html) (2017)
 
-[![Build Status](https://travis-ci.org/CoreArray/PySeqArray.png)](https://travis-ci.org/CoreArray/PySeqArray)
+[![CI](https://github.com/CoreArray/PySeqArray/actions/workflows/ci.yml/badge.svg)](https://github.com/CoreArray/PySeqArray/actions/workflows/ci.yml)
 
 pre-release version: v0.2 (requires [pycorearray](https://github.com/CoreArray/pycorearray), formerly pygds)
 
@@ -38,6 +38,7 @@ Or, from a checkout, build the extension in place:
 
 ```sh
 python3 setup.py build_ext --inplace
+python3 -m pytest tests/   # run the tests
 ```
 
 
