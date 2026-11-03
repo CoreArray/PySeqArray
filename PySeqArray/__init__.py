@@ -81,6 +81,38 @@ def _proc_func(x):
 
 # ===========================================================================
 
+# frequencies of the allele 'ref' per variant in a block of genotypes
+# (variant x sample x ploidy, 0xFF for missing)
+def _calc_af_ref(ref, geno):
+	g = geno.reshape(geno.shape[0], -1)
+	n = np.sum(g != 0xFF, axis=1)
+	with np.errstate(invalid='ignore'):
+		return np.sum(g == ref, axis=1) / n
+
+# frequencies of all alleles per variant in a block of genotypes
+def _calc_af_all(geno, num_allele):
+	rv = []
+	with np.errstate(invalid='ignore'):
+		for g, n in zip(geno.reshape(geno.shape[0], -1), num_allele):
+			g = g[g != 0xFF]
+			rv.append(np.bincount(g, minlength=n)[:n] / g.size)
+	return rv
+
+# allele frequencies in a process of RunParallel()
+def _proc_af(file, param):
+	ref = param[0]; verbose = param[1]
+	if ref is None:
+		v = file.Apply(['genotype', '$num_allele'], _calc_af_all, asis='list',
+			verbose=verbose)
+		return [ x for blk in v for x in blk ]
+	else:
+		return file.Apply('genotype', _calc_af_ref, param=ref, asis='unlist',
+			verbose=verbose)
+
+
+
+# ===========================================================================
+
 class SeqArrayFile(pycorearray.gdsfile):
 	"""
 	Class for SeqArray GDS files
@@ -431,10 +463,35 @@ class SeqArrayFile(pycorearray.gdsfile):
 
 	####  Methods  ####
 
-	def AlleleFreq(self, ref, ncpu, verbose=False):
-		if not (isinstance(ref, (int, float)) or ref is None):
-			raise ValueError('`ref` should be a numeric value or None.')
-		self.RunParallel((lambda file, param:
-				file.Apply('genotype', cc.calc_af, as_is='unlist')),
-			param=[ ref, verbose ], ncpu=ncpu)
+	def AlleleFreq(self, ref=0, ncpu=1, verbose=False):
+		"""Allele frequencies
+
+		Calculate the allele frequencies of the selected samples per selected variant
+
+		Parameters
+		----------
+		ref : int, None
+			the index of allele (0 for the reference allele, 1 for the first alternative allele, ...),
+			or None for the frequencies of all alleles
+		ncpu : int
+			the number of cores or an instance of 'multiprocessing.pool.Pool', see RunParallel()
+		verbose : bool
+			show progress information if True
+
+		Returns
+		-------
+		a numpy array if `ref` is an integer, or a list of numpy arrays if `ref` is None;
+		NaN if all genotypes of a variant are missing
+
+		See Also
+		--------
+		RunParallel : apply functions in parallel
+		"""
+		if not (ref is None or (isinstance(ref, (int, np.integer)) and ref >= 0)):
+			raise ValueError('`ref` should be a non-negative integer or None.')
+		if ref is None:
+			return self.RunParallel(_proc_af, param=[ ref, verbose ], ncpu=ncpu,
+				combine=(lambda x, y: x + y))
+		else:
+			return self.RunParallel(_proc_af, param=[ ref, verbose ], ncpu=ncpu)
 
