@@ -6,7 +6,7 @@ PySeqArray: data manipulation of whole-genome sequencing variants with SeqArray 
 
 [![Build Status](https://travis-ci.org/CoreArray/PySeqArray.png)](https://travis-ci.org/CoreArray/PySeqArray)
 
-pre-release version: v0.1
+pre-release version: v0.2 (requires [pycorearray](https://github.com/CoreArray/pycorearray), formerly pygds)
 
 
 ## Features
@@ -18,20 +18,26 @@ The SeqArray format is built on top of Genomic Data Structure (GDS) data format,
 
 ## Prerequisites
 
-Python 2 (2.6-2.7), and Python 3 (3.3-3.6)
+Python 3.10 or later
 
-NumPy 1.6.0 or later
+NumPy 1.25 or later
 
-[pycorearray](https://github.com/CoreArray/pycorearray)
+[pycorearray](https://github.com/CoreArray/pycorearray) 0.2 or later
 
 
 ## Installation
 
 ```sh
-## require the pycorearray package
-pip install git+https://github.com/CoreArray/pycorearray.git
-## install PySeqArray
 pip install git+https://github.com/CoreArray/PySeqArray.git
+```
+
+NumPy and pycorearray are installed from PyPI as dependencies; PySeqArray is
+compiled against the C header files of pycorearray.
+
+Or, from a checkout, build the extension in place:
+
+```sh
+python3 setup.py build_ext --inplace
 ```
 
 

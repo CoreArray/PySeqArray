@@ -1,0 +1,41 @@
+[build-system]
+# building against NumPy 2.x headers gives a binary that also runs on NumPy 1.x;
+# the C extension is compiled against the header files of pycorearray
+requires = ["setuptools>=77", "numpy>=2.0", "pycorearray>=0.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "PySeqArray"
+version = "0.2.0"
+description = "Python Interface to SeqArray Files for Data Management of Whole-Genome Sequence Variant Calls"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "GPL-3.0-only"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Xiuwen Zheng", email = "zhengxwen@gmail.com" },
+]
+keywords = ["SeqArray", "GDS", "CoreArray", "genomics", "bioinformatics",
+    "whole-genome sequencing", "variant calls"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+# numpy: must match NPY_TARGET_VERSION in setup.py
+dependencies = ["numpy>=1.25", "pycorearray>=0.2"]
+
+[project.urls]
+Homepage = "https://github.com/CoreArray/PySeqArray"
+Issues = "https://github.com/CoreArray/PySeqArray/issues"
+
+[tool.setuptools]
+packages = ["PySeqArray", "PySeqArray.data"]
+
+[tool.setuptools.package-data]
+"PySeqArray.data" = ["*.gds"]
