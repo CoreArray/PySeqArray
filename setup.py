@@ -21,7 +21,12 @@ setup(name='PySeqArray',
 	ext_modules = [ Extension('PySeqArray.ccall',
 		src_fnlst,
 		include_dirs = [ pycorearray.get_include(), numpy.get_include() ],
-		define_macros = [ ('USING_PYTHON', None) ],
+		define_macros = [
+			('USING_PYTHON', None),
+			('NPY_NO_DEPRECATED_API', 'NPY_1_7_API_VERSION'),
+			# oldest NumPy the binary runs on
+			('NPY_TARGET_VERSION', 'NPY_1_25_API_VERSION'),
+		],
 	) ],
 	package_data = {
 		'PySeqArray': [ 'data/*.gds' ]

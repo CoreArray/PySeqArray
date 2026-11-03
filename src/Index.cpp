@@ -161,7 +161,7 @@ PyObject* CIndex::GetLen_Sel(const C_BOOL sel[])
 			}
 		}
 		// get lengths
-		int *pAns = (int*)PyArray_DATA(ans);
+		int *pAns = (int*)PyArray_DATA((PyArrayObject*)ans);
 		while (n > 0)
 		{
 			if (L == 0)
@@ -217,7 +217,7 @@ PyObject* CIndex::GetLen_Sel(const C_BOOL sel[], int &out_var_start,
 		int *pVV = pV;
 		C_UInt32 *pLL = pL;
 		size_t LL = L;
-		int *pAns = (int*)PyArray_DATA(ans);
+		int *pAns = (int*)PyArray_DATA((PyArrayObject*)ans);
 		for (size_t m=n; m > 0; )
 		{
 			if (L == 0)
@@ -1123,20 +1123,10 @@ COREARRAY_DLL_LOCAL string GDS_PATH_PREFIX(const string &path, char prefix)
 // Import the NumPy Package
 // ===========================================================
 
-// import numpy functions
-#if (PY_MAJOR_VERSION >= 3)
-static PyObject* _init_() { import_array(); return Py_None; }
-#else
-static void _init_() { import_array(); }
-#endif
-
+// import numpy functions, return false with a Python exception if fails
 COREARRAY_DLL_LOCAL bool numpy_init()
 {
-#if (PY_MAJOR_VERSION >= 3)
-	if (_init_() == NUMPY_IMPORT_ARRAY_RETVAL) return false;
-#else
-	_init_();
-#endif
+	import_array1(false);
 	return true;
 }
 
@@ -1227,7 +1217,7 @@ COREARRAY_DLL_LOCAL bool numpy_is_array_int(PyObject *obj)
 {
 	if (PyArray_Check(obj))
 	{
-		int i = PyArray_TYPE(obj);
+		int i = PyArray_TYPE((PyArrayObject*)obj);
 		return (i==NPY_INT8 || i==NPY_UINT8 || i==NPY_INT16 || i==NPY_UINT16 ||
 			i==NPY_INT32 || i==NPY_UINT32 || i==NPY_INT64 || i==NPY_UINT64);
 	} else
@@ -1236,19 +1226,19 @@ COREARRAY_DLL_LOCAL bool numpy_is_array_int(PyObject *obj)
 
 COREARRAY_DLL_LOCAL bool numpy_is_bool(PyObject *obj)
 {
-	return (PyArray_Check(obj) != 0) && (PyArray_TYPE(obj) == NPY_BOOL);
+	return (PyArray_Check(obj) != 0) && (PyArray_TYPE((PyArrayObject*)obj) == NPY_BOOL);
 }
 
 COREARRAY_DLL_LOCAL bool numpy_is_uint8(PyObject *obj)
 {
-	return (PyArray_Check(obj) != 0) && (PyArray_TYPE(obj) == NPY_UINT8);
+	return (PyArray_Check(obj) != 0) && (PyArray_TYPE((PyArrayObject*)obj) == NPY_UINT8);
 }
 
 COREARRAY_DLL_LOCAL bool numpy_is_int(PyObject *obj)
 {
 	if (PyArray_Check(obj) != 0)
 	{
-		int np = PyArray_TYPE(obj);
+		int np = PyArray_TYPE((PyArrayObject*)obj);
 		return (np==NPY_INT8) || (np==NPY_UINT8) || (np==NPY_INT16) ||
 			(np==NPY_UINT16) || (np==NPY_INT32) || (np==NPY_UINT32) ||
 			(np==NPY_INT64) || (np==NPY_UINT64);
@@ -1258,26 +1248,26 @@ COREARRAY_DLL_LOCAL bool numpy_is_int(PyObject *obj)
 
 COREARRAY_DLL_LOCAL bool numpy_is_string(PyObject *obj)
 {
-	return (PyArray_Check(obj) != 0) && (PyArray_TYPE(obj) == NPY_OBJECT);
+	return (PyArray_Check(obj) != 0) && (PyArray_TYPE((PyArrayObject*)obj) == NPY_OBJECT);
 }
 
 
 COREARRAY_DLL_LOCAL size_t numpy_size(PyObject *obj)
 {
-	return PyArray_SIZE(obj);
+	return PyArray_SIZE((PyArrayObject*)obj);
 }
 
 COREARRAY_DLL_LOCAL void* numpy_getptr(PyObject *obj)
 {
 	if (obj)
-		return PyArray_DATA(obj);
+		return PyArray_DATA((PyArrayObject*)obj);
 	else
 		return NULL;
 }
 
 COREARRAY_DLL_LOCAL void numpy_setval(PyObject *obj, void *ptr, PyObject *val)
 {
-	PyArray_SETITEM(obj, ptr, val);
+	PyArray_SETITEM((PyArrayObject*)obj, (char*)ptr, val);
 }
 
 
@@ -1285,11 +1275,11 @@ COREARRAY_DLL_LOCAL void numpy_to_int32(PyObject *obj, vector<int> &out)
 {
 	if (PyArray_Check(obj))
 	{
-		void *ptr = PyArray_DATA(obj);
-		size_t n = PyArray_SIZE(obj);
+		void *ptr = PyArray_DATA((PyArrayObject*)obj);
+		size_t n = PyArray_SIZE((PyArrayObject*)obj);
 		out.resize(n);
 		int *p = &out[0];
-		switch (PyArray_TYPE(obj))
+		switch (PyArray_TYPE((PyArrayObject*)obj))
 		{
 		case NPY_INT8:
 			for (C_Int8 *s=(C_Int8*)ptr; n > 0; n--) *p++ = *s++;
@@ -1328,8 +1318,8 @@ COREARRAY_DLL_LOCAL void numpy_to_string(PyObject *obj, vector<string> &out)
 		out[0] = PYSTR_CHAR(obj);
 	} else if (PyArray_Check(obj))
 	{
-		PyObject **p = (PyObject**)PyArray_DATA(obj);
-		size_t n = PyArray_SIZE(obj);
+		PyObject **p = (PyObject**)PyArray_DATA((PyArrayObject*)obj);
+		size_t n = PyArray_SIZE((PyArrayObject*)obj);
 		out.resize(n);
 		for (size_t i=0; i < n; i++)
 		{
